@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.vscode/
+Documentos/
+.cursor/
+*.plan
+requirements/
+.cursorignore
+temp.txt
+*.mmd
