@@ -1,1 +1,1 @@
-# Gestao-de-Estoque-na-adega-emporio-BR
+# Gestao-de-Estoque-na-adega-Emporio-BR
