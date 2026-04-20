@@ -62,7 +62,7 @@
         <li class="nav-label">Análise</li>
 
         <li>
-          <a href="#"
+          <a href="{{ url_for('relatorios.relatorio_estoque') }}"
              class="{{ 'active' if request.endpoint and request.endpoint.startswith('relatorios.') }}">
             <i class="bi bi-bar-chart-fill"></i>
             <span>Relatórios</span>
