@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Lucratividade — Relatórios{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+
+{% block content %}
+{% include 'relatorios/_tabs.html' %}
+
+<div class="card-dark mb-4">
+  <form method="GET" class="filter-row">
+    <div class="filter-input" style="min-width:unset; flex:unset">
+      <input type="date" name="data_ini" class="filter-control" style="padding-left:12px"
+             value="{{ data_ini }}">
+    </div>
+    <div class="filter-input" style="min-width:unset; flex:unset">
+      <input type="date" name="data_fim" class="filter-control" style="padding-left:12px"
+             value="{{ data_fim }}">
+    </div>
+    <button type="submit" class="btn-accent">
+      <i class="bi bi-funnel-fill"></i> Filtrar
+    </button>
+    {% if data_ini or data_fim %}
+    <a href="{{ url_for('relatorios.relatorio_lucro') }}" class="btn-outline">Limpar</a>
+    {% endif %}
+  </form>
+</div>
+
+<div class="card-dark">
+  <div class="section-header mb-3">
+    <div class="section-title-group">
+      <span class="section-dot dot-green"></span>
+      <h5 class="section-title">Lucratividade por Produto</h5>
+    </div>
+    <span class="badge-gray">{{ resultados|length }} produto(s)</span>
+  </div>
+
+  {% if resultados %}
+  <div class="report-summary-bar mb-4">
+    <div class="report-kpi">
+      <span class="report-kpi-label">Receita total</span>
+      <strong class="report-kpi-value">R$ {{ "%.2f"|format(receita_total)|replace(".", ",") }}</strong>
+    </div>
+    <div class="report-kpi">
+      <span class="report-kpi-label">Lucro bruto</span>
+      <strong class="report-kpi-value value-ok">
+        R$ {{ "%.2f"|format(lucro_total)|replace(".", ",") }}
+      </strong>
+    </div>
+    <div class="report-kpi">
+      <span class="report-kpi-label">Margem bruta</span>
+      <strong class="report-kpi-value value-ok">
+        {% if receita_total > 0 %}
+          {{ "%.1f"|format(lucro_total / receita_total * 100) }}%
+        {% else %}—{% endif %}
+      </strong>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="table-scroll">
+    <table class="table-dark-custom">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Fabricante</th>
+          <th class="text-center">Qtd. Vendida</th>
+          <th class="text-end">Receita</th>
+          <th class="text-end">Custo</th>
+          <th class="text-end">Lucro Bruto</th>
+          <th class="text-end">Margem</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in resultados %}
+        {% set lucro = r.receita - r.custo_total %}
+        <tr>
+          <td><span class="product-name">{{ r.nome }}</span></td>
+          <td class="text-muted-col">{{ r.fabricante or '—' }}</td>
+          <td class="text-center">{{ r.qtd_vendida }}</td>
+          <td class="text-end nowrap">R$ {{ "%.2f"|format(r.receita)|replace(".", ",") }}</td>
+          <td class="text-end nowrap text-muted-col">R$ {{ "%.2f"|format(r.custo_total)|replace(".", ",") }}</td>
+          <td class="text-end nowrap">
+            <strong class="{{ 'value-ok' if lucro >= 0 else 'value-danger' }}">
+              R$ {{ "%.2f"|format(lucro)|replace(".", ",") }}
+            </strong>
+          </td>
+          <td class="text-end text-muted-col">
+            {% if r.receita > 0 %}
+              {{ "%.1f"|format(lucro / r.receita * 100) }}%
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted-col" style="padding: 24px">
+            Nenhuma venda registrada no período.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% if resultados %}
+      <tfoot>
+        <tr>
+          <td colspan="3" style="padding-top: 14px; font-size: 13px; font-weight: 600; color: var(--text-secondary);">Total</td>
+          <td class="text-end nowrap" style="padding-top: 14px; font-weight: 600;">
+            R$ {{ "%.2f"|format(receita_total)|replace(".", ",") }}
+          </td>
+          <td></td>
+          <td class="text-end nowrap" style="padding-top: 14px; font-weight: 700; color: var(--accent);">
+            R$ {{ "%.2f"|format(lucro_total)|replace(".", ",") }}
+          </td>
+          <td class="text-end" style="padding-top: 14px; color: var(--accent);">
+            {% if receita_total > 0 %}{{ "%.1f"|format(lucro_total / receita_total * 100) }}%{% endif %}
+          </td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+{% endblock %}

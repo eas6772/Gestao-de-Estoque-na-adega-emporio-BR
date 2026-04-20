@@ -1,0 +1,22 @@
+<div class="report-tabs mb-4">
+  <a href="{{ url_for('relatorios.relatorio_estoque') }}"
+     class="report-tab {{ 'active' if request.endpoint == 'relatorios.relatorio_estoque' else '' }}">
+    <i class="bi bi-archive-fill"></i> Estoque Atual
+  </a>
+  <a href="{{ url_for('relatorios.relatorio_reposicao') }}"
+     class="report-tab {{ 'active' if request.endpoint == 'relatorios.relatorio_reposicao' else '' }}">
+    <i class="bi bi-exclamation-triangle-fill"></i> Reposição
+  </a>
+  <a href="{{ url_for('relatorios.mais_vendidos') }}"
+     class="report-tab {{ 'active' if request.endpoint == 'relatorios.mais_vendidos' else '' }}">
+    <i class="bi bi-trophy-fill"></i> Mais Vendidos
+  </a>
+  <a href="{{ url_for('relatorios.relatorio_lucro') }}"
+     class="report-tab {{ 'active' if request.endpoint == 'relatorios.relatorio_lucro' else '' }}">
+    <i class="bi bi-graph-up-arrow"></i> Lucratividade
+  </a>
+  <a href="{{ url_for('relatorios.relatorio_movimentacoes') }}"
+     class="report-tab {{ 'active' if request.endpoint == 'relatorios.relatorio_movimentacoes' else '' }}">
+    <i class="bi bi-arrow-left-right"></i> Movimentações
+  </a>
+</div>

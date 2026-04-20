@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Histórico de Vendas — Empório BR{% endblock %}
+{% block page_title %}Histórico de Vendas{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('vendas.nova_venda') }}" class="btn-accent">
+    <i class="bi bi-plus-lg"></i> Nova Venda
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Filtros de data -->
+<div class="card-dark mb-4">
+  <form method="GET" action="{{ url_for('vendas.historico') }}" class="filter-row flex-wrap">
+    <input type="date" name="data_ini" value="{{ data_ini }}"
+           class="filter-select" title="Data inicial">
+    <input type="date" name="data_fim" value="{{ data_fim }}"
+           class="filter-select" title="Data final">
+    <button type="submit" class="btn-accent">
+      <i class="bi bi-funnel-fill"></i> Filtrar
+    </button>
+    {% if data_ini or data_fim %}
+      <a href="{{ url_for('vendas.historico') }}" class="btn-outline">
+        <i class="bi bi-x-lg"></i>
+      </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Tabela -->
+<div class="card-dark">
+  <div class="section-header mb-3">
+    <div class="section-title-group">
+      <span class="section-dot dot-green"></span>
+      <h5 class="section-title">{{ paginacao.total }} venda{{ 's' if paginacao.total != 1 }}</h5>
+    </div>
+  </div>
+
+  {% if paginacao.items %}
+    <div class="table-scroll">
+      <table class="table-dark-custom">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Data / Hora</th>
+            <th>Operador</th>
+            <th>Itens</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in paginacao.items %}
+          <tr>
+            <td class="text-muted-col">#{{ v.id }}</td>
+            <td class="nowrap text-muted-col">
+              {{ v.data.strftime('%d/%m/%Y %H:%M') if v.data else '—' }}
+            </td>
+            <td>{{ v.usuario.nome }}</td>
+            <td>
+              <span class="badge-gray">
+                {{ v.itens.count() }} produto{{ 's' if v.itens.count() != 1 }}
+              </span>
+            </td>
+            <td><strong class="value-ok">R$ {{ '%.2f'|format(v.total) }}</strong></td>
+            <td>
+              <a href="{{ url_for('vendas.recibo', id=v.id) }}"
+                 class="btn-icon" title="Ver recibo">
+                <i class="bi bi-receipt"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginação -->
+    {% if paginacao.pages > 1 %}
+    <div class="pagination-wrap mt-3">
+      <ul class="pagination-dark">
+        <li class="page-item {{ 'disabled' if not paginacao.has_prev }}">
+          <a class="page-link"
+             href="{{ url_for('vendas.historico', pagina=paginacao.prev_num, data_ini=data_ini, data_fim=data_fim) }}">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+        {% for p in paginacao.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+            <li class="page-item {{ 'active' if p == paginacao.page }}">
+              <a class="page-link"
+                 href="{{ url_for('vendas.historico', pagina=p, data_ini=data_ini, data_fim=data_fim) }}">
+                {{ p }}
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not paginacao.has_next }}">
+          <a class="page-link"
+             href="{{ url_for('vendas.historico', pagina=paginacao.next_num, data_ini=data_ini, data_fim=data_fim) }}">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+      </ul>
+      <span class="pagination-info">
+        {{ paginacao.total }} resultado{{ 's' if paginacao.total != 1 }}
+        · página {{ paginacao.page }} de {{ paginacao.pages }}
+      </span>
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-cart-x empty-icon-green"></i>
+      <p>Nenhuma venda registrada ainda.</p>
+      <a href="{{ url_for('vendas.nova_venda') }}" class="btn-accent mt-2">
+        <i class="bi bi-plus-lg"></i> Registrar primeira venda
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

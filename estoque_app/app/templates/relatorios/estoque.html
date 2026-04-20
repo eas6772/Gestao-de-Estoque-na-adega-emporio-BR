@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Estoque Atual — Relatórios{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+
+{% block content %}
+{% include 'relatorios/_tabs.html' %}
+
+<div class="card-dark">
+  <div class="section-header mb-3">
+    <div class="section-title-group">
+      <span class="section-dot dot-blue"></span>
+      <h5 class="section-title">Estoque Atual por Produto</h5>
+    </div>
+    <span class="badge-gray">{{ produtos|length }} produto(s)</span>
+  </div>
+
+  <div class="table-scroll">
+    <table class="table-dark-custom">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Produto</th>
+          <th>Fabricante</th>
+          <th class="text-center">Estoque</th>
+          <th class="text-center">Mínimo</th>
+          <th class="text-center">Máximo</th>
+          <th>Status</th>
+          <th class="text-end">Valor (custo)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in produtos %}
+        <tr>
+          <td class="text-muted-col">{{ loop.index }}</td>
+          <td><span class="product-name">{{ p.nome }}</span></td>
+          <td class="text-muted-col">{{ p.fabricante or '—' }}</td>
+          <td class="text-center">
+            <strong class="{{ 'value-danger' if p.estoque_atual == 0 else ('value-warning' if p.estoque_atual <= p.estoque_minimo else '') }}">
+              {{ p.estoque_atual }}
+            </strong>
+          </td>
+          <td class="text-center text-muted-col">{{ p.estoque_minimo }}</td>
+          <td class="text-center text-muted-col">{{ p.estoque_maximo }}</td>
+          <td>
+            {% if p.estoque_atual == 0 %}
+              <span class="status-badge status-danger">Esgotado</span>
+            {% elif p.estoque_atual <= p.estoque_minimo %}
+              <span class="status-badge status-warning">Abaixo do mínimo</span>
+            {% else %}
+              <span class="status-badge status-ok">Normal</span>
+            {% endif %}
+          </td>
+          <td class="text-end text-muted-col nowrap">
+            R$ {{ "%.2f"|format(p.estoque_atual * p.preco_custo)|replace(".", ",") }}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted-col" style="padding: 24px">
+            Nenhum produto ativo cadastrado.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% if produtos %}
+      <tfoot>
+        <tr>
+          <td colspan="7" style="padding-top: 14px; font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+            Total em estoque (a preço de custo)
+          </td>
+          <td class="text-end nowrap" style="padding-top: 14px; font-weight: 700; color: var(--accent);">
+            R$ {{ "%.2f"|format(total_estoque)|replace(".", ",") }}
+          </td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+{% endblock %}

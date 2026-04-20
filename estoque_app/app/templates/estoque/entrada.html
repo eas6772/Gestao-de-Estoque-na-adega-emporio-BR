@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Entrada de Estoque — Empório BR{% endblock %}
+{% block page_title %}Entrada de Estoque{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('estoque.visao_geral') }}" class="btn-outline">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card-dark">
+      <div class="section-header mb-4">
+        <div class="section-title-group">
+          <span class="section-dot dot-green"></span>
+          <h5 class="section-title">Registrar Entrada de Mercadoria</h5>
+        </div>
+      </div>
+
+      <form method="POST" action="{{ url_for('estoque.entrada') }}" class="form-dark">
+
+        <div class="mb-3">
+          <label for="produto_id">Produto <span class="required-star">*</span></label>
+          <select id="produto_id" name="produto_id" required>
+            <option value="">Selecione um produto</option>
+            {% for p in produtos %}
+              <option value="{{ p.id }}"
+                {{ 'selected' if form.produto_id | string == p.id | string }}>
+                {{ p.nome }}{% if p.fabricante %} — {{ p.fabricante }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="numero_lote">Número / Código do Lote</label>
+          <input type="text" id="numero_lote" name="numero_lote"
+                 value="{{ form.numero_lote or '' }}"
+                 placeholder="Ex.: NF-1234, Lote-A, 2024-001"
+                 maxlength="60">
+          <p class="field-hint">Opcional — identificação do fornecedor ou nota fiscal.</p>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="quantidade">Quantidade <span class="required-star">*</span></label>
+            <input type="number" id="quantidade" name="quantidade"
+                   min="1" value="{{ form.quantidade or '' }}"
+                   placeholder="Ex.: 24" required>
+          </div>
+          <div class="col-md-6">
+            <label for="data_validade">Data de Validade</label>
+            <input type="date" id="data_validade" name="data_validade"
+                   value="{{ form.data_validade or '' }}"
+                   min="{{ today }}">
+            <p class="field-hint">Deixe em branco para produtos sem validade.</p>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="motivo">Observação</label>
+          <input type="text" id="motivo" name="motivo"
+                 value="{{ form.motivo or '' }}"
+                 placeholder="Ex.: Compra NF #1234, fornecedor João Silva">
+        </div>
+
+        <div class="info-box mb-4" id="estoqueAtual" style="display:none">
+          <i class="bi bi-info-circle-fill"></i>
+          <span id="estoqueTexto"></span>
+        </div>
+
+        <div class="form-actions">
+          <a href="{{ url_for('estoque.visao_geral') }}" class="btn-outline">Cancelar</a>
+          <button type="submit" class="btn-accent">
+            <i class="bi bi-box-arrow-in-down"></i> Registrar Entrada
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const estoques = {
+    {% for p in produtos %}
+    {{ p.id }}: { nome: "{{ p.nome }}", atual: {{ p.estoque_atual }}, minimo: {{ p.estoque_minimo }} },
+    {% endfor %}
+  };
+
+  document.getElementById('produto_id').addEventListener('change', function() {
+    const box = document.getElementById('estoqueAtual');
+    const txt = document.getElementById('estoqueTexto');
+    const id = parseInt(this.value);
+    if (id && estoques[id]) {
+      const p = estoques[id];
+      txt.textContent = `Estoque atual: ${p.atual} unidade(s) | Mínimo: ${p.minimo}`;
+      box.style.display = 'flex';
+    } else {
+      box.style.display = 'none';
+    }
+  });
+
+  // Dispara no carregamento se já houver produto pré-selecionado
+  document.getElementById('produto_id').dispatchEvent(new Event('change'));
+</script>
+{% endblock %}

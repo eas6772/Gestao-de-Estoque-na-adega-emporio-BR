@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Produtos — Empório BR{% endblock %}
+{% block page_title %}Produtos{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.is_admin %}
+    <a href="{{ url_for('produtos.novo_produto') }}" class="btn-accent">
+      <i class="bi bi-plus-lg"></i> Novo Produto
+    </a>
+  {% endif %}
+  <a href="{{ url_for('produtos.categorias') }}" class="btn-outline">
+    <i class="bi bi-tags"></i> Categorias
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Filtros -->
+<div class="card-dark mb-4">
+  <form method="GET" action="{{ url_for('produtos.lista_produtos') }}" class="filter-row">
+    <div class="filter-input">
+      <i class="bi bi-search filter-search-icon"></i>
+      <input type="text" name="q" value="{{ busca }}"
+             placeholder="Buscar por nome, fabricante ou código de barras..."
+             class="filter-control">
+    </div>
+    <select name="categoria_id" class="filter-select">
+      <option value="">Todas as categorias</option>
+      {% for cat in categorias %}
+        <option value="{{ cat.id }}" {{ 'selected' if categoria_id == cat.id }}>{{ cat.nome }}</option>
+      {% endfor %}
+    </select>
+    <select name="so_ativos" class="filter-select">
+      <option value="1" {{ 'selected' if so_ativos == '1' }}>Somente ativos</option>
+      <option value="0" {{ 'selected' if so_ativos == '0' }}>Todos</option>
+    </select>
+    <button type="submit" class="btn-accent">
+      <i class="bi bi-funnel-fill"></i> Filtrar
+    </button>
+    {% if busca or categoria_id or so_ativos == '0' %}
+      <a href="{{ url_for('produtos.lista_produtos') }}" class="btn-outline">
+        <i class="bi bi-x-lg"></i>
+      </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Tabela -->
+<div class="card-dark">
+  <div class="section-header mb-3">
+    <div class="section-title-group">
+      <span class="section-dot dot-green"></span>
+      <h5 class="section-title">
+        {{ paginacao.total }} produto{{ 's' if paginacao.total != 1 }}
+        {% if busca %}<span class="search-term">para "{{ busca }}"</span>{% endif %}
+      </h5>
+    </div>
+  </div>
+
+  {% if paginacao.items %}
+    <div class="table-scroll">
+      <table class="table-dark-custom">
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Categoria</th>
+            <th>Custo</th>
+            <th>Venda</th>
+            <th>Margem</th>
+            <th>Estoque</th>
+            <th>Status</th>
+            {% if current_user.is_admin %}<th></th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in paginacao.items %}
+          <tr>
+            <td>
+              <span class="product-name">{{ p.nome }}</span>
+              <span class="product-brand">
+                {% if p.fabricante %}{{ p.fabricante }}{% endif %}
+                {% if p.volume %} · {{ p.volume }}{% endif %}
+                {% if p.codigo_barras %} · {{ p.codigo_barras }}{% endif %}
+              </span>
+            </td>
+            <td><span class="badge-gray">{{ p.categoria.nome }}</span></td>
+            <td class="text-muted-col">R$ {{ '%.2f'|format(p.preco_custo) }}</td>
+            <td><strong>R$ {{ '%.2f'|format(p.preco_venda) }}</strong></td>
+            <td>
+              <span class="badge-green">{{ '%.0f'|format(p.margem_lucro) }}%</span>
+            </td>
+            <td>
+              {% set est = p.estoque_atual %}
+              {% if est == 0 %}
+                <span class="badge-red">{{ est }}</span>
+              {% elif est <= p.estoque_minimo %}
+                <span class="badge-yellow">{{ est }}</span>
+              {% else %}
+                <span class="badge-green">{{ est }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if p.ativo %}
+                <span class="badge-green">Ativo</span>
+              {% else %}
+                <span class="badge-gray">Inativo</span>
+              {% endif %}
+            </td>
+            {% if current_user.is_admin %}
+            <td>
+              <div class="action-btns">
+                <a href="{{ url_for('produtos.editar_produto', id=p.id) }}"
+                   class="btn-icon" title="Editar">
+                  <i class="bi bi-pencil-fill"></i>
+                </a>
+                <form method="POST"
+                      action="{{ url_for('produtos.toggle_produto', id=p.id) }}"
+                      onsubmit="return confirm('{{ 'Desativar' if p.ativo else 'Ativar' }} \"{{ p.nome }}\"?')">
+                  <button type="submit"
+                          class="btn-icon {{ 'btn-icon-danger' if p.ativo else 'btn-icon-success' }}"
+                          title="{{ 'Desativar produto' if p.ativo else 'Reativar produto' }}">
+                    <i class="bi bi-{{ 'x-circle-fill' if p.ativo else 'check-circle-fill' }}"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginação -->
+    {% if paginacao.pages > 1 %}
+    <div class="pagination-wrap mt-3">
+      <ul class="pagination-dark">
+        <li class="page-item {{ 'disabled' if not paginacao.has_prev }}">
+          <a class="page-link"
+             href="{{ url_for('produtos.lista_produtos', pagina=paginacao.prev_num, q=busca, categoria_id=categoria_id, so_ativos=so_ativos) }}">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+        {% for p in paginacao.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+            <li class="page-item {{ 'active' if p == paginacao.page }}">
+              <a class="page-link"
+                 href="{{ url_for('produtos.lista_produtos', pagina=p, q=busca, categoria_id=categoria_id, so_ativos=so_ativos) }}">
+                {{ p }}
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not paginacao.has_next }}">
+          <a class="page-link"
+             href="{{ url_for('produtos.lista_produtos', pagina=paginacao.next_num, q=busca, categoria_id=categoria_id, so_ativos=so_ativos) }}">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+      </ul>
+      <span class="pagination-info">
+        {{ paginacao.total }} resultado{{ 's' if paginacao.total != 1 }}
+        · página {{ paginacao.page }} de {{ paginacao.pages }}
+      </span>
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-box-seam empty-icon-green"></i>
+      <p>Nenhum produto encontrado.</p>
+      {% if current_user.is_admin %}
+        <a href="{{ url_for('produtos.novo_produto') }}" class="btn-accent mt-2">
+          <i class="bi bi-plus-lg"></i> Cadastrar primeiro produto
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

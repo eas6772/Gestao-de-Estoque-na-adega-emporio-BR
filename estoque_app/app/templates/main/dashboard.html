@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — Empório BR{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block topbar_actions %}
+  <span class="topbar-date">
+    <i class="bi bi-calendar3 me-1"></i>
+    {{ hoje.strftime('%d/%m/%Y') }}
+  </span>
+{% endblock %}
+
+{% block content %}
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card-dark kpi-card">
+      <div class="kpi-top">
+        <div>
+          <p class="card-title">Produtos Ativos</p>
+          <p class="card-value">{{ total_produtos }}</p>
+        </div>
+        <div class="card-icon card-icon-green">
+          <i class="bi bi-box-seam-fill"></i>
+        </div>
+      </div>
+      <p class="kpi-sub">cadastrados no sistema</p>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card-dark kpi-card {% if alertas_estoque %}kpi-alert{% endif %}">
+      <div class="kpi-top">
+        <div>
+          <p class="card-title">Estoque Baixo</p>
+          <p class="card-value {% if alertas_estoque %}value-danger{% endif %}">
+            {{ alertas_estoque | length }}
+          </p>
+        </div>
+        <div class="card-icon {% if alertas_estoque %}card-icon-red{% else %}card-icon-green{% endif %}">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+      </div>
+      <p class="kpi-sub">
+        {% if alertas_estoque %}produtos abaixo do mínimo{% else %}todos os estoques OK{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card-dark kpi-card {% if lotes_vencendo %}kpi-warn{% endif %}">
+      <div class="kpi-top">
+        <div>
+          <p class="card-title">Vencendo em 30 dias</p>
+          <p class="card-value {% if lotes_vencendo %}value-warning{% endif %}">
+            {{ lotes_vencendo | length }}
+          </p>
+        </div>
+        <div class="card-icon {% if lotes_vencendo %}card-icon-yellow{% else %}card-icon-green{% endif %}">
+          <i class="bi bi-clock-history"></i>
+        </div>
+      </div>
+      <p class="kpi-sub">
+        {% if lotes_vencendo %}lotes com validade próxima{% else %}nenhum lote crítico{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card-dark kpi-card">
+      <div class="kpi-top">
+        <div>
+          <p class="card-title">Vendas Hoje</p>
+          <p class="card-value">R$ {{ '%.2f'|format(total_vendas_hoje) }}</p>
+        </div>
+        <div class="card-icon card-icon-blue">
+          <i class="bi bi-cart-fill"></i>
+        </div>
+      </div>
+      <p class="kpi-sub">{{ qtd_vendas_hoje }} venda{{ 's' if qtd_vendas_hoje != 1 }}</p>
+    </div>
+  </div>
+
+</div>
+<!-- /KPI Cards -->
+
+<div class="row g-3">
+
+  <!-- Alertas de Estoque Baixo -->
+  <div class="col-lg-6">
+    <div class="card-dark h-100">
+      <div class="section-header mb-3">
+        <div class="section-title-group">
+          <span class="section-dot dot-red"></span>
+          <h5 class="section-title">Estoque Baixo</h5>
+        </div>
+        {% if alertas_estoque %}
+          <span class="badge-red">{{ alertas_estoque | length }} alerta{{ 's' if alertas_estoque | length != 1 }}</span>
+        {% endif %}
+      </div>
+
+      {% if alertas_estoque %}
+        <div class="table-scroll">
+          <table class="table-dark-custom">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th>Atual</th>
+                <th>Mínimo</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in alertas_estoque %}
+              <tr>
+                <td>
+                  <span class="product-name">{{ p.nome }}</span>
+                  {% if p.fabricante %}<span class="product-brand">{{ p.fabricante }}</span>{% endif %}
+                </td>
+                <td><span class="badge-gray">{{ p.categoria.nome }}</span></td>
+                <td>
+                  <strong class="{% if p.estoque_atual == 0 %}text-danger{% else %}text-warning{% endif %}">
+                    {{ p.estoque_atual }}
+                  </strong>
+                </td>
+                <td class="text-muted-col">{{ p.estoque_minimo }}</td>
+                <td>
+                  {% if p.estoque_atual == 0 %}
+                    <span class="badge-red">Sem estoque</span>
+                  {% else %}
+                    <span class="badge-yellow">Crítico</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="bi bi-check-circle-fill empty-icon-green"></i>
+          <p>Todos os produtos estão com estoque adequado.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Lotes Próximos ao Vencimento -->
+  <div class="col-lg-6">
+    <div class="card-dark h-100">
+      <div class="section-header mb-3">
+        <div class="section-title-group">
+          <span class="section-dot dot-yellow"></span>
+          <h5 class="section-title">Próximos ao Vencimento</h5>
+        </div>
+        {% if lotes_vencendo %}
+          <span class="badge-yellow">{{ lotes_vencendo | length }} lote{{ 's' if lotes_vencendo | length != 1 }}</span>
+        {% endif %}
+      </div>
+
+      {% if lotes_vencendo %}
+        <div class="table-scroll">
+          <table class="table-dark-custom">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Qtd.</th>
+                <th>Validade</th>
+                <th>Dias</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lote in lotes_vencendo %}
+              {% set dias = (lote.data_validade - hoje).days %}
+              <tr>
+                <td>
+                  <span class="product-name">{{ lote.produto.nome }}</span>
+                </td>
+                <td>{{ lote.quantidade }}</td>
+                <td>{{ lote.data_validade.strftime('%d/%m/%Y') }}</td>
+                <td>
+                  {% if dias <= 7 %}
+                    <span class="badge-red">{{ dias }}d</span>
+                  {% elif dias <= 15 %}
+                    <span class="badge-yellow">{{ dias }}d</span>
+                  {% else %}
+                    <span class="badge-blue">{{ dias }}d</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="bi bi-check-circle-fill empty-icon-green"></i>
+          <p>Nenhum lote vencendo nos próximos 30 dias.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

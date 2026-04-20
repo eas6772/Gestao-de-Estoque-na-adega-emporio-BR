@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajuste de Estoque — Empório BR{% endblock %}
+{% block page_title %}Ajuste de Estoque{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('estoque.visao_geral') }}" class="btn-outline">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card-dark">
+      <div class="section-header mb-2">
+        <div class="section-title-group">
+          <span class="section-dot dot-yellow"></span>
+          <h5 class="section-title">Ajuste Manual de Estoque</h5>
+        </div>
+      </div>
+      <p class="form-hint mb-4">
+        <i class="bi bi-shield-lock-fill me-1"></i>
+        Ação restrita a administradores. Toda alteração é registrada no histórico.
+      </p>
+
+      <form method="POST" action="{{ url_for('estoque.ajuste') }}" class="form-dark">
+
+        <div class="mb-3">
+          <label for="produto_id">Produto <span class="required-star">*</span></label>
+          <select id="produto_id" name="produto_id" required>
+            <option value="">Selecione um produto</option>
+            {% for p in produtos %}
+              <option value="{{ p.id }}"
+                {{ 'selected' if form.produto_id | string == p.id | string }}>
+                {{ p.nome }}{% if p.fabricante %} — {{ p.fabricante }}{% endif %}
+                ({{ p.estoque_atual }} un.)
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3" id="loteContainer" style="display:none">
+          <label for="lote_id">Lote <span class="required-star">*</span></label>
+          <select id="lote_id" name="lote_id" required>
+            <option value="">Selecione um lote</option>
+          </select>
+        </div>
+
+        <div class="mb-3" id="qtdContainer" style="display:none">
+          <label for="nova_quantidade">Nova Quantidade <span class="required-star">*</span></label>
+          <input type="number" id="nova_quantidade" name="nova_quantidade"
+                 min="0" placeholder="Quantidade correta no estoque físico">
+          <p class="field-hint" id="qtdAtualInfo"></p>
+        </div>
+
+        <div class="mb-4">
+          <label for="motivo">Motivo do Ajuste <span class="required-star">*</span></label>
+          <input type="text" id="motivo" name="motivo"
+                 value="{{ form.motivo or '' }}"
+                 placeholder="Ex.: Contagem física, produto danificado..."
+                 required>
+        </div>
+
+        <div class="form-actions">
+          <a href="{{ url_for('estoque.visao_geral') }}" class="btn-outline">Cancelar</a>
+          <button type="submit" class="btn-accent" id="btnAjuste" disabled>
+            <i class="bi bi-sliders"></i> Confirmar Ajuste
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const prodSelect = document.getElementById('produto_id');
+  const loteContainer = document.getElementById('loteContainer');
+  const loteSelect = document.getElementById('lote_id');
+  const qtdContainer = document.getElementById('qtdContainer');
+  const qtdInput = document.getElementById('nova_quantidade');
+  const qtdInfo = document.getElementById('qtdAtualInfo');
+  const btnAjuste = document.getElementById('btnAjuste');
+
+  prodSelect.addEventListener('change', async function() {
+    const id = this.value;
+    loteSelect.innerHTML = '<option value="">Carregando...</option>';
+    loteContainer.style.display = 'none';
+    qtdContainer.style.display = 'none';
+    btnAjuste.disabled = true;
+
+    if (!id) return;
+
+    const resp = await fetch(`/estoque/lotes/${id}`);
+    const lotes = await resp.json();
+
+    loteSelect.innerHTML = '<option value="">Selecione um lote</option>';
+    lotes.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id;
+      const loteLabel = l.numero_lote ? ` [${l.numero_lote}]` : '';
+      opt.textContent = `Lote #${l.id}${loteLabel} — ${l.data_validade} — ${l.quantidade} un. (entrada: ${l.data_entrada})`;
+      opt.dataset.qtd = l.quantidade;
+      loteSelect.appendChild(opt);
+    });
+
+    if (lotes.length === 0) {
+      loteSelect.innerHTML = '<option value="">Nenhum lote disponível</option>';
+    }
+    loteContainer.style.display = 'block';
+  });
+
+  loteSelect.addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    if (opt && opt.dataset.qtd !== undefined) {
+      qtdContainer.style.display = 'block';
+      qtdInput.value = opt.dataset.qtd;
+      qtdInfo.textContent = `Quantidade atual no sistema: ${opt.dataset.qtd} unidade(s)`;
+      btnAjuste.disabled = false;
+    } else {
+      qtdContainer.style.display = 'none';
+      btnAjuste.disabled = true;
+    }
+  });
+</script>
+{% endblock %}

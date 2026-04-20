@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Estoque — Empório BR{% endblock %}
+{% block page_title %}Controle de Estoque{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('estoque.entrada') }}" class="btn-accent">
+    <i class="bi bi-box-arrow-in-down"></i> Entrada
+  </a>
+  {% if current_user.is_admin %}
+    <a href="{{ url_for('estoque.ajuste') }}" class="btn-outline">
+      <i class="bi bi-sliders"></i> Ajuste
+    </a>
+  {% endif %}
+  <a href="{{ url_for('estoque.movimentacoes') }}" class="btn-outline">
+    <i class="bi bi-clock-history"></i> Histórico
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Filtros -->
+<div class="card-dark mb-4">
+  <form method="GET" action="{{ url_for('estoque.visao_geral') }}" class="filter-row">
+    <div class="filter-input">
+      <i class="bi bi-search filter-search-icon"></i>
+      <input type="text" name="q" value="{{ busca }}"
+             placeholder="Buscar produto..." class="filter-control">
+    </div>
+    <div class="filter-tabs">
+      <a href="{{ url_for('estoque.visao_geral', q=busca, filtro='todos') }}"
+         class="filter-tab {{ 'active' if filtro == 'todos' }}">Todos</a>
+      <a href="{{ url_for('estoque.visao_geral', q=busca, filtro='baixo') }}"
+         class="filter-tab filter-tab-yellow {{ 'active' if filtro == 'baixo' }}">Estoque Baixo</a>
+      <a href="{{ url_for('estoque.visao_geral', q=busca, filtro='zerado') }}"
+         class="filter-tab filter-tab-red {{ 'active' if filtro == 'zerado' }}">Zerado</a>
+    </div>
+    <button type="submit" class="btn-accent">
+      <i class="bi bi-funnel-fill"></i> Filtrar
+    </button>
+  </form>
+</div>
+
+<!-- Tabela de Estoque -->
+<div class="card-dark">
+  <div class="section-header mb-3">
+    <div class="section-title-group">
+      <span class="section-dot dot-green"></span>
+      <h5 class="section-title">{{ total }} produto{{ 's' if total != 1 }}</h5>
+    </div>
+    <span class="text-muted-sm">Página {{ pagina }} de {{ total_paginas }}</span>
+  </div>
+
+  {% if produtos %}
+    <div class="table-scroll">
+      <table class="table-dark-custom">
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Categoria</th>
+            <th>Atual</th>
+            <th>Mínimo</th>
+            <th>Máximo</th>
+            <th>Lotes</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in produtos %}
+          {% set est = p.estoque_atual %}
+          <tr>
+            <td>
+              <span class="product-name">{{ p.nome }}</span>
+              {% if p.fabricante %}<span class="product-brand">{{ p.fabricante }}</span>{% endif %}
+            </td>
+            <td><span class="badge-gray">{{ p.categoria.nome }}</span></td>
+            <td>
+              {% if est == 0 %}
+                <strong class="value-danger">0</strong>
+              {% elif est <= p.estoque_minimo %}
+                <strong class="value-warning">{{ est }}</strong>
+              {% else %}
+                <strong class="value-ok">{{ est }}</strong>
+              {% endif %}
+            </td>
+            <td class="text-muted-col">{{ p.estoque_minimo }}</td>
+            <td class="text-muted-col">{{ p.estoque_maximo }}</td>
+            <td class="text-muted-col">
+              {{ p.lotes.filter_by().count() }}
+            </td>
+            <td>
+              {% if est == 0 %}
+                <span class="badge-red">Zerado</span>
+              {% elif est <= p.estoque_minimo %}
+                <span class="badge-yellow">Baixo</span>
+              {% elif est >= p.estoque_maximo %}
+                <span class="badge-blue">Máximo</span>
+              {% else %}
+                <span class="badge-green">Normal</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('estoque.entrada', produto_id=p.id) }}"
+                 class="btn-icon" title="Registrar entrada">
+                <i class="bi bi-plus-lg"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginação -->
+    {% if total_paginas > 1 %}
+    <div class="pagination-wrap mt-3">
+      <ul class="pagination-dark">
+        {% if pagina > 1 %}
+        <li class="page-item">
+          <a class="page-link"
+             href="{{ url_for('estoque.visao_geral', pagina=pagina-1, q=busca, filtro=filtro) }}">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+        {% endif %}
+        {% for i in range(1, total_paginas + 1) %}
+        <li class="page-item {{ 'active' if i == pagina }}">
+          <a class="page-link"
+             href="{{ url_for('estoque.visao_geral', pagina=i, q=busca, filtro=filtro) }}">{{ i }}</a>
+        </li>
+        {% endfor %}
+        {% if pagina < total_paginas %}
+        <li class="page-item">
+          <a class="page-link"
+             href="{{ url_for('estoque.visao_geral', pagina=pagina+1, q=busca, filtro=filtro) }}">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-archive empty-icon-green"></i>
+      <p>Nenhum produto encontrado com os filtros aplicados.</p>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

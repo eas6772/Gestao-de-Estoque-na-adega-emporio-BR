@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Movimentações — Relatórios{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+
+{% block content %}
+{% include 'relatorios/_tabs.html' %}
+
+<div class="card-dark mb-4">
+  <form method="GET" class="filter-row">
+    <div class="filter-input" style="min-width:unset; flex:unset">
+      <input type="date" name="data_ini" class="filter-control" style="padding-left:12px"
+             value="{{ data_ini }}">
+    </div>
+    <div class="filter-input" style="min-width:unset; flex:unset">
+      <input type="date" name="data_fim" class="filter-control" style="padding-left:12px"
+             value="{{ data_fim }}">
+    </div>
+    <select name="tipo" class="filter-select">
+      <option value="">Todos os tipos</option>
+      <option value="entrada" {{ 'selected' if tipo == 'entrada' }}>Entradas</option>
+      <option value="saida"   {{ 'selected' if tipo == 'saida' }}>Saídas</option>
+      <option value="ajuste"  {{ 'selected' if tipo == 'ajuste' }}>Ajustes</option>
+    </select>
+    <button type="submit" class="btn-accent">
+      <i class="bi bi-funnel-fill"></i> Filtrar
+    </button>
+    {% if data_ini or data_fim or tipo %}
+    <a href="{{ url_for('relatorios.relatorio_movimentacoes') }}" class="btn-outline">Limpar</a>
+    {% endif %}
+  </form>
+</div>
+
+<div class="card-dark">
+  <div class="section-header mb-3">
+    <div class="section-title-group">
+      <span class="section-dot dot-blue"></span>
+      <h5 class="section-title">Histórico de Movimentações</h5>
+    </div>
+    <span class="badge-gray">{{ paginacao.total }} registro(s)</span>
+  </div>
+
+  <div class="table-scroll">
+    <table class="table-dark-custom">
+      <thead>
+        <tr>
+          <th>Data/Hora</th>
+          <th>Tipo</th>
+          <th>Produto</th>
+          <th>Lote</th>
+          <th class="text-center">Qtd.</th>
+          <th>Operador</th>
+          <th>Motivo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in paginacao.items %}
+        <tr>
+          <td class="text-muted-col nowrap">
+            {{ m.data.strftime('%d/%m/%Y %H:%M') }}
+          </td>
+          <td>
+            <span class="status-badge tipo-{{ m.tipo }}">
+              {{ {'entrada': 'Entrada', 'saida': 'Saída', 'ajuste': 'Ajuste'}[m.tipo] }}
+            </span>
+          </td>
+          <td>
+            <span class="product-name">{{ m.produto.nome }}</span>
+          </td>
+          <td class="text-muted-col">
+            {% if m.lote %}
+              #{{ m.lote.id }}{% if m.lote.numero_lote %} · {{ m.lote.numero_lote }}{% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-center">
+            <strong class="{{ 'value-ok' if m.tipo == 'entrada' else ('value-danger' if m.tipo == 'saida' else 'value-warning') }}">
+              {{ '+' if m.tipo == 'entrada' else ('−' if m.tipo == 'saida' else '±') }}{{ m.quantidade }}
+            </strong>
+          </td>
+          <td class="text-muted-col">{{ m.usuario.nome }}</td>
+          <td class="text-muted-col">{{ m.motivo or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted-col" style="padding: 24px">
+            Nenhuma movimentação encontrada.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if paginacao.pages > 1 %}
+  <div class="pagination-wrap mt-4">
+    <span class="pagination-info">
+      Página {{ paginacao.page }} de {{ paginacao.pages }} — {{ paginacao.total }} registro(s)
+    </span>
+    <div style="display:flex; gap:8px">
+      {% if paginacao.has_prev %}
+      <a href="{{ url_for('relatorios.relatorio_movimentacoes', pagina=paginacao.prev_num, data_ini=data_ini, data_fim=data_fim, tipo=tipo) }}"
+         class="btn-outline btn-sm">
+        <i class="bi bi-chevron-left"></i> Anterior
+      </a>
+      {% endif %}
+      {% if paginacao.has_next %}
+      <a href="{{ url_for('relatorios.relatorio_movimentacoes', pagina=paginacao.next_num, data_ini=data_ini, data_fim=data_fim, tipo=tipo) }}"
+         class="btn-outline btn-sm">
+        Próxima <i class="bi bi-chevron-right"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

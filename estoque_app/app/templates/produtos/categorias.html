@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorias — Empório BR{% endblock %}
+{% block page_title %}Categorias{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.is_admin and not modo_form %}
+    <a href="{{ url_for('produtos.nova_categoria') }}" class="btn-accent">
+      <i class="bi bi-plus-lg"></i> Nova Categoria
+    </a>
+  {% endif %}
+  <a href="{{ url_for('produtos.lista_produtos') }}" class="btn-outline">
+    <i class="bi bi-arrow-left"></i> Produtos
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Formulário (nova ou editar inline) -->
+  {% if current_user.is_admin %}
+  <div class="col-lg-4">
+    <div class="card-dark">
+      <div class="section-header mb-3">
+        <div class="section-title-group">
+          <span class="section-dot dot-green"></span>
+          <h5 class="section-title">{{ 'Nova Categoria' if modo_form else 'Adicionar Categoria' }}</h5>
+        </div>
+      </div>
+      <form method="POST"
+            action="{{ url_for('produtos.nova_categoria') }}"
+            class="form-dark">
+        <div class="mb-3">
+          <label for="nome">Nome <span class="required-star">*</span></label>
+          <input type="text" id="nome" name="nome"
+                 placeholder="Ex.: Cervejas Artesanais"
+                 required autofocus>
+        </div>
+        <button type="submit" class="btn-accent w-100">
+          <i class="bi bi-plus-lg"></i> Criar Categoria
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Lista -->
+  <div class="col-lg-{{ '8' if current_user.is_admin else '12' }}">
+    <div class="card-dark">
+      <div class="section-header mb-3">
+        <div class="section-title-group">
+          <span class="section-dot dot-blue"></span>
+          <h5 class="section-title">{{ categorias | length }} categoria{{ 's' if categorias | length != 1 }}</h5>
+        </div>
+      </div>
+
+      {% if categorias %}
+        <table class="table-dark-custom">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Status</th>
+              <th>Produtos</th>
+              {% if current_user.is_admin %}<th></th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for cat in categorias %}
+            <tr>
+              <td>
+                <strong>{{ cat.nome }}</strong>
+              </td>
+              <td>
+                {% if cat.ativo %}
+                  <span class="badge-green">Ativa</span>
+                {% else %}
+                  <span class="badge-gray">Inativa</span>
+                {% endif %}
+              </td>
+              <td class="text-muted-col">
+                {{ cat.produtos.filter_by(ativo=True).count() }} produto(s)
+              </td>
+              {% if current_user.is_admin %}
+              <td>
+                <div class="action-btns">
+                  <!-- Editar inline via modal simples -->
+                  <button class="btn-icon"
+                          onclick="abrirEditar({{ cat.id }}, '{{ cat.nome }}')"
+                          title="Editar">
+                    <i class="bi bi-pencil-fill"></i>
+                  </button>
+                  <form method="POST"
+                        action="{{ url_for('produtos.toggle_categoria', id=cat.id) }}"
+                        onsubmit="return confirm('{{ 'Desativar' if cat.ativo else 'Ativar' }} {{ cat.nome }}?')">
+                    <button type="submit"
+                            class="btn-icon {{ 'btn-icon-danger' if cat.ativo }}"
+                            title="{{ 'Desativar' if cat.ativo else 'Ativar' }}">
+                      <i class="bi bi-{{ 'toggle-on' if cat.ativo else 'toggle-off' }}-fill"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">
+          <i class="bi bi-tags empty-icon-green"></i>
+          <p>Nenhuma categoria cadastrada.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal de edição inline -->
+{% if current_user.is_admin %}
+<div class="modal-overlay" id="modalEditar" onclick="fecharModal(event)">
+  <div class="modal-card">
+    <div class="section-header mb-3">
+      <div class="section-title-group">
+        <span class="section-dot dot-blue"></span>
+        <h5 class="section-title">Editar Categoria</h5>
+      </div>
+      <button class="btn-icon" onclick="document.getElementById('modalEditar').style.display='none'">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <form method="POST" id="formEditar" class="form-dark">
+      <div class="mb-3">
+        <label for="nomeEditar">Nome <span class="required-star">*</span></label>
+        <input type="text" id="nomeEditar" name="nome" required>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn-outline flex-fill"
+                onclick="document.getElementById('modalEditar').style.display='none'">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-accent flex-fill">
+          <i class="bi bi-check-lg"></i> Salvar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function abrirEditar(id, nome) {
+    document.getElementById('formEditar').action = '/categoria/' + id + '/editar';
+    document.getElementById('nomeEditar').value = nome;
+    document.getElementById('modalEditar').style.display = 'flex';
+    document.getElementById('nomeEditar').focus();
+  }
+
+  function fecharModal(e) {
+    if (e.target.id === 'modalEditar') {
+      e.target.style.display = 'none';
+    }
+  }
+</script>
+{% endblock %}

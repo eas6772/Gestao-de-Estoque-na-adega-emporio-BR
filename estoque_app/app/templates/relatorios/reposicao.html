@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Reposição de Estoque — Relatórios{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+
+{% block content %}
+{% include 'relatorios/_tabs.html' %}
+
+<div class="card-dark">
+  <div class="section-header mb-3">
+    <div class="section-title-group">
+      <span class="section-dot dot-red"></span>
+      <h5 class="section-title">Produtos para Reposição</h5>
+    </div>
+    <span class="badge-gray">{{ produtos|length }} produto(s)</span>
+  </div>
+
+  {% if not produtos %}
+  <div class="empty-state">
+    <i class="bi bi-check-circle-fill empty-icon-green" style="font-size: 2.5rem; opacity: 1;"></i>
+    <p>Todos os produtos estão acima do estoque mínimo.</p>
+  </div>
+  {% else %}
+
+  <div class="info-box info-box-warning mb-4">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>
+      {{ produtos|length }} produto(s) com estoque igual ou abaixo do mínimo. Providencie reposição.
+    </span>
+  </div>
+
+  <div class="table-scroll">
+    <table class="table-dark-custom">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Fabricante</th>
+          <th class="text-center">Estoque Atual</th>
+          <th class="text-center">Mínimo</th>
+          <th class="text-center">Máximo</th>
+          <th class="text-center">Qtd. Sugerida</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in produtos %}
+        <tr>
+          <td><span class="product-name">{{ p.nome }}</span></td>
+          <td class="text-muted-col">{{ p.fabricante or '—' }}</td>
+          <td class="text-center">
+            <strong class="{{ 'value-danger' if p.estoque_atual == 0 else 'value-warning' }}">
+              {{ p.estoque_atual }}
+            </strong>
+          </td>
+          <td class="text-center text-muted-col">{{ p.estoque_minimo }}</td>
+          <td class="text-center text-muted-col">{{ p.estoque_maximo }}</td>
+          <td class="text-center">
+            <strong class="value-warning">{{ p.estoque_maximo - p.estoque_atual }}</strong>
+          </td>
+          <td>
+            <a href="{{ url_for('estoque.entrada') }}" class="btn-outline btn-sm">
+              <i class="bi bi-box-arrow-in-down"></i> Registrar Entrada
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% endif %}
+</div>
+{% endblock %}

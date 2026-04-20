@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+
+{% block title %}Nova Venda — Empório BR{% endblock %}
+{% block page_title %}PDV — Nova Venda{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('vendas.historico') }}" class="btn-outline">
+    <i class="bi bi-clock-history"></i> Histórico
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="pdv-layout">
+
+  <!-- Coluna esquerda: busca + carrinho -->
+  <div class="pdv-main">
+
+    <!-- Busca de produto -->
+    <div class="card-dark mb-4">
+      <div class="section-header mb-3">
+        <div class="section-title-group">
+          <span class="section-dot dot-green"></span>
+          <h5 class="section-title">Adicionar Produto</h5>
+        </div>
+      </div>
+      <div class="search-wrapper">
+        <div class="filter-input">
+          <i class="bi bi-search filter-search-icon"></i>
+          <input type="text" id="searchInput" class="filter-control"
+                 placeholder="Buscar por nome, fabricante ou código de barras..."
+                 autocomplete="off">
+        </div>
+        <div class="search-results" id="searchResults" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Carrinho -->
+    <div class="card-dark">
+      <div class="section-header mb-3">
+        <div class="section-title-group">
+          <span class="section-dot dot-blue"></span>
+          <h5 class="section-title">Carrinho</h5>
+        </div>
+        <span class="badge-gray" id="cartCount">0 item(s)</span>
+      </div>
+
+      <div id="cartEmpty" class="empty-state">
+        <i class="bi bi-cart empty-icon-green"></i>
+        <p>Nenhum produto adicionado.<br>Use a busca acima para incluir itens.</p>
+      </div>
+
+      <div id="cartWrap" style="display:none">
+        <div class="table-scroll">
+          <table class="table-dark-custom">
+            <thead>
+              <tr>
+                <th>Produto / Lote</th>
+                <th>Preço Unit.</th>
+                <th>Qtd.</th>
+                <th>Subtotal</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="cartBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coluna direita: resumo + finalizar -->
+  <div class="pdv-sidebar">
+    <div class="card-dark pdv-summary">
+      <div class="section-header mb-4">
+        <div class="section-title-group">
+          <span class="section-dot dot-yellow"></span>
+          <h5 class="section-title">Resumo da Venda</h5>
+        </div>
+      </div>
+
+      <div class="summary-row">
+        <span>Itens no carrinho</span>
+        <strong id="summaryQtd">0</strong>
+      </div>
+      <div class="summary-row summary-total">
+        <span>Total</span>
+        <strong id="cartTotal">R$ 0,00</strong>
+      </div>
+
+      <form method="POST" action="{{ url_for('vendas.nova_venda') }}" id="formVenda">
+        <input type="hidden" name="itens_json" id="itensJson" value="[]">
+        <button type="submit" class="btn-accent w-100 mt-4" id="btnFinalizar" disabled>
+          <i class="bi bi-bag-check-fill"></i> Finalizar Venda
+        </button>
+      </form>
+
+      <a href="{{ url_for('estoque.visao_geral') }}" class="btn-outline w-100 mt-2">
+        Cancelar
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modal: seleção de lote ──────────────────────────────── -->
+<div class="modal-overlay" id="loteModal">
+  <div class="modal-card" style="max-width:480px">
+
+    <div class="section-header mb-3">
+      <div class="section-title-group">
+        <span class="section-dot dot-green"></span>
+        <h5 class="section-title" id="modalProdutoNome">Produto</h5>
+      </div>
+      <button type="button" class="btn-icon" id="modalClose" title="Fechar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="form-dark">
+      <div class="mb-3">
+        <label for="modalLoteSelect">Lote <span class="required-star">*</span></label>
+        <select id="modalLoteSelect">
+          <option value="">Carregando lotes...</option>
+        </select>
+        <p class="field-hint" id="modalLoteInfo"></p>
+      </div>
+
+      <div class="mb-4">
+        <label for="modalQtd">Quantidade <span class="required-star">*</span></label>
+        <input type="number" id="modalQtd" min="1" value="1" placeholder="Qtd.">
+        <p class="field-hint" id="modalQtdInfo"></p>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-outline" id="modalCancelar">Cancelar</button>
+        <button type="button" class="btn-accent" id="modalConfirmar" disabled>
+          <i class="bi bi-cart-plus-fill"></i> Adicionar ao Carrinho
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Estado do carrinho ──────────────────────────────────────
+  const cart = [];
+
+  function fmt(val) {
+    return 'R$ ' + val.toFixed(2).replace('.', ',');
+  }
+
+  function addToCart(item) {
+    // Mesmo produto + mesmo lote: soma quantidade
+    const existing = cart.find(
+      i => i.produto_id === item.produto_id && i.lote_id === item.lote_id
+    );
+    if (existing) {
+      existing.quantidade = Math.min(
+        existing.quantidade + item.quantidade,
+        existing.estoque_lote
+      );
+    } else {
+      cart.push({ ...item });
+    }
+    renderCart();
+  }
+
+  function removeFromCart(index) {
+    cart.splice(index, 1);
+    renderCart();
+  }
+
+  function changeQty(index, delta) {
+    const item = cart[index];
+    if (!item) return;
+    item.quantidade = Math.max(1, Math.min(item.estoque_lote, item.quantidade + delta));
+    renderCart();
+  }
+
+  function renderCart() {
+    const tbody      = document.getElementById('cartBody');
+    const cartEmpty  = document.getElementById('cartEmpty');
+    const cartWrap   = document.getElementById('cartWrap');
+    const cartCount  = document.getElementById('cartCount');
+    const summaryQtd = document.getElementById('summaryQtd');
+    const totalEl    = document.getElementById('cartTotal');
+    const btnFin     = document.getElementById('btnFinalizar');
+    const itensInput = document.getElementById('itensJson');
+
+    tbody.innerHTML = '';
+    let total = 0, totalItens = 0;
+
+    cart.forEach((item, idx) => {
+      const subtotal = item.quantidade * item.preco_unitario;
+      total += subtotal;
+      totalItens += item.quantidade;
+
+      const loteLabel = item.numero_lote
+        ? `Lote #${item.lote_id} · ${item.numero_lote}`
+        : `Lote #${item.lote_id}`;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <span class="product-name">${item.nome}</span>
+          ${item.fabricante ? `<span class="product-brand">${item.fabricante}</span>` : ''}
+          <span class="product-brand lote-tag"><i class="bi bi-tag-fill me-1"></i>${loteLabel}</span>
+        </td>
+        <td class="text-muted-col nowrap">${fmt(item.preco_unitario)}</td>
+        <td>
+          <div class="qty-control">
+            <button type="button" class="qty-btn" onclick="changeQty(${idx}, -1)">−</button>
+            <span class="qty-value">${item.quantidade}</span>
+            <button type="button" class="qty-btn" onclick="changeQty(${idx}, +1)">+</button>
+          </div>
+        </td>
+        <td><strong>${fmt(subtotal)}</strong></td>
+        <td>
+          <button type="button" class="btn-icon btn-icon-danger"
+                  onclick="removeFromCart(${idx})" title="Remover">
+            <i class="bi bi-trash-fill"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const empty = cart.length === 0;
+    cartEmpty.style.display  = empty ? 'flex' : 'none';
+    cartWrap.style.display   = empty ? 'none' : 'block';
+    cartCount.textContent    = `${cart.length} produto(s)`;
+    summaryQtd.textContent   = totalItens;
+    totalEl.textContent      = fmt(total);
+    btnFin.disabled          = empty;
+    itensInput.value = JSON.stringify(
+      cart.map(i => ({
+        produto_id: i.produto_id,
+        lote_id:    i.lote_id,
+        quantidade: i.quantidade,
+      }))
+    );
+  }
+
+  // ── Busca de produto ────────────────────────────────────────
+  let searchTimeout;
+  const searchInput   = document.getElementById('searchInput');
+  const searchResults = document.getElementById('searchResults');
+
+  searchInput.addEventListener('input', function () {
+    clearTimeout(searchTimeout);
+    const q = this.value.trim();
+    if (q.length < 2) { searchResults.style.display = 'none'; return; }
+    searchTimeout = setTimeout(() => fetchProdutos(q), 280);
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') searchResults.style.display = 'none';
+  });
+
+  async function fetchProdutos(q) {
+    const resp = await fetch(`/venda/buscar-produto?q=${encodeURIComponent(q)}`);
+    const produtos = await resp.json();
+    renderResults(produtos);
+  }
+
+  function renderResults(produtos) {
+    searchResults.innerHTML = '';
+    if (produtos.length === 0) {
+      searchResults.innerHTML = '<div class="search-empty">Nenhum produto encontrado.</div>';
+    } else {
+      produtos.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'search-result-item' + (p.estoque <= 0 ? ' search-result-esgotado' : '');
+        div.innerHTML = `
+          <div class="search-result-info">
+            <span class="product-name">${p.nome}</span>
+            ${p.fabricante ? `<span class="product-brand">${p.fabricante}</span>` : ''}
+            ${p.codigo_barras ? `<span class="product-brand">${p.codigo_barras}</span>` : ''}
+          </div>
+          <div class="search-result-meta">
+            <span class="${p.estoque > 0 ? 'value-ok' : 'value-danger'}">${fmt(p.preco_venda)}</span>
+            <span class="text-muted-col">Estoque: ${p.estoque}</span>
+          </div>
+        `;
+        if (p.estoque > 0) {
+          div.addEventListener('click', () => {
+            searchInput.value = '';
+            searchResults.style.display = 'none';
+            abrirModalLote(p);
+          });
+        }
+        searchResults.appendChild(div);
+      });
+    }
+    searchResults.style.display = 'block';
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-wrapper')) searchResults.style.display = 'none';
+  });
+
+  // ── Modal de seleção de lote ────────────────────────────────
+  let produtoAtual = null;
+  const loteModal      = document.getElementById('loteModal');
+  const modalNome      = document.getElementById('modalProdutoNome');
+  const modalLoteSel   = document.getElementById('modalLoteSelect');
+  const modalLoteInfo  = document.getElementById('modalLoteInfo');
+  const modalQtd       = document.getElementById('modalQtd');
+  const modalQtdInfo   = document.getElementById('modalQtdInfo');
+  const modalConfirmar = document.getElementById('modalConfirmar');
+
+  async function abrirModalLote(produto) {
+    produtoAtual = produto;
+    modalNome.textContent        = produto.nome;
+    modalLoteSel.innerHTML       = '<option value="">Carregando lotes...</option>';
+    modalLoteInfo.textContent    = '';
+    modalQtd.value               = 1;
+    modalQtd.max                 = '';
+    modalQtdInfo.textContent     = '';
+    modalConfirmar.disabled      = true;
+    loteModal.style.display      = 'flex';
+
+    const resp  = await fetch(`/estoque/lotes/${produto.id}`);
+    const lotes = await resp.json();
+
+    modalLoteSel.innerHTML = '<option value="">Selecione um lote</option>';
+
+    if (lotes.length === 0) {
+      modalLoteSel.innerHTML = '<option value="">Nenhum lote disponível</option>';
+      return;
+    }
+
+    lotes.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id;
+      const codigo = l.numero_lote ? ` [${l.numero_lote}]` : '';
+      opt.textContent = `Lote #${l.id}${codigo} — Val: ${l.data_validade} — ${l.quantidade} un.`;
+      opt.dataset.qtd      = l.quantidade;
+      opt.dataset.numero   = l.numero_lote || '';
+      opt.dataset.validade = l.data_validade;
+      modalLoteSel.appendChild(opt);
+    });
+  }
+
+  function fecharModal() {
+    loteModal.style.display = 'none';
+    produtoAtual = null;
+  }
+
+  modalLoteSel.addEventListener('change', function () {
+    const opt = this.options[this.selectedIndex];
+    if (opt && opt.dataset.qtd) {
+      const max = parseInt(opt.dataset.qtd);
+      modalQtd.max             = max;
+      modalQtd.value           = Math.min(parseInt(modalQtd.value) || 1, max);
+      modalLoteInfo.textContent = `Validade: ${opt.dataset.validade}`;
+      modalQtdInfo.textContent  = `Disponível neste lote: ${max} unidade(s)`;
+      modalConfirmar.disabled   = false;
+    } else {
+      modalQtd.max              = '';
+      modalLoteInfo.textContent = '';
+      modalQtdInfo.textContent  = '';
+      modalConfirmar.disabled   = true;
+    }
+  });
+
+  modalQtd.addEventListener('input', function () {
+    const max = parseInt(this.max);
+    if (max && parseInt(this.value) > max) this.value = max;
+    if (parseInt(this.value) < 1 || !this.value) this.value = 1;
+  });
+
+  modalConfirmar.addEventListener('click', function () {
+    const opt = modalLoteSel.options[modalLoteSel.selectedIndex];
+    const qtd = parseInt(modalQtd.value);
+    if (!opt || !opt.value || !qtd || !produtoAtual) return;
+
+    addToCart({
+      produto_id:    produtoAtual.id,
+      lote_id:       parseInt(opt.value),
+      nome:          produtoAtual.nome,
+      fabricante:    produtoAtual.fabricante,
+      numero_lote:   opt.dataset.numero,
+      preco_unitario: produtoAtual.preco_venda,
+      estoque_lote:  parseInt(opt.dataset.qtd),
+      quantidade:    qtd,
+    });
+
+    fecharModal();
+    searchInput.focus();
+  });
+
+  document.getElementById('modalClose').addEventListener('click', fecharModal);
+  document.getElementById('modalCancelar').addEventListener('click', fecharModal);
+  loteModal.addEventListener('click', e => { if (e.target === loteModal) fecharModal(); });
+</script>
+{% endblock %}

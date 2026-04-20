@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% set editando = produto is defined and produto %}
+{% block title %}{{ 'Editar' if editando else 'Novo' }} Produto — Empório BR{% endblock %}
+{% block page_title %}{{ 'Editar Produto' if editando else 'Novo Produto' }}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('produtos.lista_produtos') }}" class="btn-outline">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9 col-xl-8">
+    <form method="POST"
+          action="{{ url_for('produtos.editar_produto', id=produto.id) if editando else url_for('produtos.novo_produto') }}"
+          class="form-dark">
+
+      <!-- Informações Básicas -->
+      <div class="card-dark mb-4">
+        <div class="section-header mb-4">
+          <div class="section-title-group">
+            <span class="section-dot dot-green"></span>
+            <h5 class="section-title">Informações Básicas</h5>
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-12">
+            <label for="nome">Nome do Produto <span class="required-star">*</span></label>
+            <input type="text" id="nome" name="nome"
+                   value="{{ form.nome if form.nome is string else (produto.nome if editando else '') }}"
+                   placeholder="Ex.: Vinho Tinto Seco 750ml"
+                   required>
+          </div>
+          <div class="col-md-6">
+            <label for="categoria_id">Categoria <span class="required-star">*</span></label>
+            <select id="categoria_id" name="categoria_id" required>
+              <option value="">Selecione uma categoria</option>
+              {% for cat in categorias %}
+                <option value="{{ cat.id }}"
+                  {{ 'selected' if (form.categoria_id | string == cat.id | string) or (editando and produto.categoria_id == cat.id) }}>
+                  {{ cat.nome }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="fabricante">Fabricante / Marca</label>
+            <input type="text" id="fabricante" name="fabricante"
+                   value="{{ form.fabricante if form.fabricante is string else (produto.fabricante or '' if editando else '') }}"
+                   placeholder="Ex.: Vinícola Aurora">
+          </div>
+          <div class="col-md-4">
+            <label for="volume">Volume</label>
+            <input type="text" id="volume" name="volume"
+                   value="{{ form.volume if form.volume is string else (produto.volume or '' if editando else '') }}"
+                   placeholder="Ex.: 750ml">
+          </div>
+          <div class="col-md-4">
+            <label for="peso">Peso</label>
+            <input type="text" id="peso" name="peso"
+                   value="{{ form.peso if form.peso is string else (produto.peso or '' if editando else '') }}"
+                   placeholder="Ex.: 1,2kg">
+          </div>
+          <div class="col-md-4">
+            <label for="codigo_barras">Código de Barras</label>
+            <input type="text" id="codigo_barras" name="codigo_barras"
+                   value="{{ form.codigo_barras if form.codigo_barras is string else (produto.codigo_barras or '' if editando else '') }}"
+                   placeholder="Ex.: 7891234567890">
+          </div>
+        </div>
+      </div>
+
+      <!-- Precificação -->
+      <div class="card-dark mb-4">
+        <div class="section-header mb-4">
+          <div class="section-title-group">
+            <span class="section-dot dot-blue"></span>
+            <h5 class="section-title">Precificação</h5>
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label for="preco_custo">Preço de Custo (R$) <span class="required-star">*</span></label>
+            <input type="number" id="preco_custo" name="preco_custo"
+                   step="0.01" min="0"
+                   value="{{ form.preco_custo if form.preco_custo is string else ('%.2f'|format(produto.preco_custo) if editando else '0.00') }}"
+                   required>
+          </div>
+          <div class="col-md-4">
+            <label for="margem_lucro">Margem de Lucro (%) <span class="required-star">*</span></label>
+            <input type="number" id="margem_lucro" name="margem_lucro"
+                   step="0.1" min="0"
+                   value="{{ form.margem_lucro if form.margem_lucro is string else ('%.1f'|format(produto.margem_lucro) if editando else '30.0') }}"
+                   required>
+          </div>
+          <div class="col-md-4">
+            <label for="preco_venda_preview">Preço de Venda (R$)</label>
+            <input type="text" id="preco_venda_preview"
+                   placeholder="Calculado automaticamente"
+                   readonly
+                   class="input-readonly"
+                   value="{{ 'R$ ' + '%.2f'|format(produto.preco_venda) if editando else '' }}">
+          </div>
+        </div>
+        <p class="form-hint mt-2">
+          <i class="bi bi-info-circle me-1"></i>
+          Preço de venda = Preço de custo × (1 + Margem / 100)
+        </p>
+      </div>
+
+      <!-- Controle de Estoque -->
+      <div class="card-dark mb-4">
+        <div class="section-header mb-4">
+          <div class="section-title-group">
+            <span class="section-dot dot-yellow"></span>
+            <h5 class="section-title">Limites de Estoque</h5>
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="estoque_minimo">Estoque Mínimo <span class="required-star">*</span></label>
+            <input type="number" id="estoque_minimo" name="estoque_minimo"
+                   min="0"
+                   value="{{ form.estoque_minimo if form.estoque_minimo is string else (produto.estoque_minimo if editando else 5) }}"
+                   required>
+            <p class="field-hint">Abaixo deste valor o alerta de estoque baixo é acionado.</p>
+          </div>
+          <div class="col-md-6">
+            <label for="estoque_maximo">Estoque Máximo <span class="required-star">*</span></label>
+            <input type="number" id="estoque_maximo" name="estoque_maximo"
+                   min="0"
+                   value="{{ form.estoque_maximo if form.estoque_maximo is string else (produto.estoque_maximo if editando else 100) }}"
+                   required>
+            <p class="field-hint">Referência para pedidos de reposição.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="{{ url_for('produtos.lista_produtos') }}" class="btn-outline">Cancelar</a>
+        <button type="submit" class="btn-accent">
+          <i class="bi bi-check-lg"></i>
+          {{ 'Salvar Alterações' if editando else 'Cadastrar Produto' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const custInput  = document.getElementById('preco_custo');
+  const margemInput = document.getElementById('margem_lucro');
+  const preview    = document.getElementById('preco_venda_preview');
+
+  function atualizarPreco() {
+    const custo  = parseFloat(custInput.value) || 0;
+    const margem = parseFloat(margemInput.value) || 0;
+    const venda  = custo * (1 + margem / 100);
+    preview.value = 'R$ ' + venda.toFixed(2);
+  }
+
+  custInput.addEventListener('input', atualizarPreco);
+  margemInput.addEventListener('input', atualizarPreco);
+  atualizarPreco();
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Recibo #{{ venda.id }} — Empório BR{% endblock %}
+{% block page_title %}Recibo da Venda{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('vendas.nova_venda') }}" class="btn-accent">
+    <i class="bi bi-plus-lg"></i> Nova Venda
+  </a>
+  <a href="{{ url_for('vendas.historico') }}" class="btn-outline">
+    <i class="bi bi-clock-history"></i> Histórico
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <div class="card-dark">
+      <!-- Cabeçalho do recibo -->
+      <div class="recibo-header">
+        <div class="recibo-logo">
+          <i class="bi bi-boxes"></i>
+        </div>
+        <h3 class="recibo-title">Empório BR</h3>
+        <p class="recibo-subtitle">Comprovante de Venda</p>
+      </div>
+
+      <div class="recibo-meta">
+        <div class="recibo-meta-item">
+          <span class="text-muted-col">Venda</span>
+          <strong>#{{ venda.id }}</strong>
+        </div>
+        <div class="recibo-meta-item">
+          <span class="text-muted-col">Data</span>
+          <strong>{{ venda.data.strftime('%d/%m/%Y %H:%M') if venda.data else '—' }}</strong>
+        </div>
+        <div class="recibo-meta-item">
+          <span class="text-muted-col">Operador</span>
+          <strong>{{ venda.usuario.nome }}</strong>
+        </div>
+      </div>
+
+      <hr class="divider-dark">
+
+      <!-- Itens -->
+      <div class="table-scroll">
+        <table class="table-dark-custom">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th class="text-end">Qtd.</th>
+              <th class="text-end">Unit.</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set itens_agrupados = {} %}
+            {% for item in venda.itens %}
+              {% set chave = item.produto_id %}
+              {% if chave in itens_agrupados %}
+                {% set _ = itens_agrupados.update({chave: {
+                  'produto': item.produto,
+                  'quantidade': itens_agrupados[chave].quantidade + item.quantidade,
+                  'preco_unitario': item.preco_unitario
+                }}) %}
+              {% else %}
+                {% set _ = itens_agrupados.update({chave: item}) %}
+              {% endif %}
+            {% endfor %}
+            {% for item in venda.itens | groupby('produto_id') %}
+              {% set primeiro = item.list[0] %}
+              {% set qtd_total = item.list | sum(attribute='quantidade') %}
+              <tr>
+                <td>
+                  <span class="product-name">{{ primeiro.produto.nome }}</span>
+                  {% if primeiro.produto.fabricante %}
+                    <span class="product-brand">{{ primeiro.produto.fabricante }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-end text-muted-col">{{ qtd_total }}</td>
+                <td class="text-end text-muted-col">R$ {{ '%.2f'|format(primeiro.preco_unitario) }}</td>
+                <td class="text-end"><strong>R$ {{ '%.2f'|format(primeiro.preco_unitario * qtd_total) }}</strong></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="divider-dark">
+
+      <!-- Total -->
+      <div class="recibo-total">
+        <span>Total</span>
+        <strong class="value-ok recibo-total-valor">R$ {{ '%.2f'|format(venda.total) }}</strong>
+      </div>
+
+      <!-- Ações -->
+      <div class="form-actions mt-4">
+        <a href="{{ url_for('vendas.nova_venda') }}" class="btn-accent">
+          <i class="bi bi-plus-lg"></i> Nova Venda
+        </a>
+        <a href="{{ url_for('vendas.historico') }}" class="btn-outline">
+          <i class="bi bi-clock-history"></i> Ver Histórico
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
