@@ -7,6 +7,6 @@ Documentos/
 .CLAUDE.md
 *.plan
 requirements/
-.cursorignore
 temp.txt
 *.mmd
+instance/
