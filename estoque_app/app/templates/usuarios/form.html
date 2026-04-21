@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Editar' if acao == 'editar' else 'Novo' }} Usuário — Empório BR{% endblock %}
+{% block page_title %}{{ 'Editar' if acao == 'editar' else 'Novo' }} Usuário{% endblock %}
+
+{% block content %}
+<div class="card-dark" style="max-width: 520px;">
+  <div class="section-header mb-4">
+    <div class="section-title-group">
+      <span class="section-dot {{ 'dot-yellow' if acao == 'editar' else 'dot-green' }}"></span>
+      <h5 class="section-title">
+        {{ 'Editar: ' + usuario.nome if acao == 'editar' else 'Cadastrar novo usuário' }}
+      </h5>
+    </div>
+  </div>
+
+  <form method="POST">
+    <div class="form-group mb-3">
+      <label class="form-label-dark">Nome de usuário</label>
+      <input type="text" name="nome" class="filter-control" style="padding-left:12px; width:100%"
+             value="{{ usuario.nome if usuario else '' }}" required autofocus maxlength="100">
+    </div>
+
+    <div class="form-group mb-3">
+      <label class="form-label-dark">Perfil</label>
+      <select name="perfil" class="filter-control" style="padding-left:12px; width:100%">
+        <option value="operador" {{ 'selected' if usuario and usuario.perfil == 'operador' else '' }}>Operador</option>
+        <option value="admin" {{ 'selected' if usuario and usuario.perfil == 'admin' else '' }}>Administrador</option>
+      </select>
+    </div>
+
+    <div class="form-group mb-4">
+      <label class="form-label-dark">
+        {{ 'Nova senha' if acao == 'editar' else 'Senha' }}
+        {% if acao == 'editar' %}<span class="text-muted-col" style="font-size:11px;">(deixe em branco para não alterar)</span>{% endif %}
+      </label>
+      <input type="password" name="senha" class="filter-control" style="padding-left:12px; width:100%"
+             {{ 'required' if acao == 'novo' else '' }} minlength="6" autocomplete="new-password"
+             placeholder="Mínimo 6 caracteres">
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <button type="submit" class="btn-accent">
+        <i class="bi bi-{{ 'floppy-fill' if acao == 'editar' else 'person-plus-fill' }}"></i>
+        {{ 'Salvar alterações' if acao == 'editar' else 'Criar usuário' }}
+      </button>
+      <a href="{{ url_for('usuarios.lista_usuarios') }}" class="btn-outline">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

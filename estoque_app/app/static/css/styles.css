@@ -130,47 +130,8 @@ a { text-decoration: none; color: inherit; }
   padding-left: 21px;
 }
 
-/* Footer */
-.sidebar-footer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-}
-
-.user-avatar {
-  width: 36px; height: 36px;
-  background: var(--accent-dim);
-  border: 1px solid var(--border-accent);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--accent);
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.user-info { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; }
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.user-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-role {
-  font-size: 11px;
-  color: var(--accent);
-}
+/* Footer — oculto (usuário movido para a topbar) */
+.sidebar-footer { display: none; }
 
 .btn-logout {
   width: 32px; height: 32px;
@@ -182,6 +143,61 @@ a { text-decoration: none; color: inherit; }
 }
 
 .btn-logout:hover { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+/* ── Chip de usuário na topbar ── */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 14px 5px 6px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  cursor: default;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.topbar-user:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.topbar-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 1px solid var(--border-accent);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.topbar-user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.topbar-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.topbar-user-role {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+}
 
 /* ── Main Content ──────────────────────────────────────────── */
 .main-content {
@@ -362,6 +378,17 @@ a { text-decoration: none; color: inherit; }
 
 .btn-icon-danger:hover { background: rgba(239,68,68,0.15); color: var(--danger); border-color: transparent; }
 .btn-icon-success:hover { background: rgba(34,197,94,0.15); color: var(--accent); border-color: transparent; }
+.btn-icon-ok:hover { background: rgba(34,197,94,0.15); color: var(--accent); border-color: transparent; }
+
+.form-label-dark {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 6px;
+}
 
 /* ============================================================
    FORMULÁRIOS

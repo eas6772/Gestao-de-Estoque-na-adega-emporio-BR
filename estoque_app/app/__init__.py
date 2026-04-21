@@ -19,6 +19,7 @@ def create_app(config_name='default'):
     from app.routes.estoque import estoque_bp
     from app.routes.vendas import vendas_bp
     from app.routes.relatorios import relatorios_bp
+    from app.routes.usuarios import usuarios_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -26,5 +27,6 @@ def create_app(config_name='default'):
     app.register_blueprint(estoque_bp)
     app.register_blueprint(vendas_bp)
     app.register_blueprint(relatorios_bp)
+    app.register_blueprint(usuarios_bp)
 
     return app

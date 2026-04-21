@@ -12,7 +12,13 @@
       <span class="section-dot dot-red"></span>
       <h5 class="section-title">Produtos para Reposição</h5>
     </div>
-    <span class="badge-gray">{{ produtos|length }} produto(s)</span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="badge-gray">{{ produtos|length }} produto(s)</span>
+      <a href="{{ url_for('relatorios.mais_vendidos_pdf') }}"
+         class="btn-accent btn-sm" title="Exportar Ordem de Reposição em PDF">
+        <i class="bi bi-file-earmark-pdf-fill"></i> Gerar PDF
+      </a>
+    </div>
   </div>
 
   {% if not produtos %}

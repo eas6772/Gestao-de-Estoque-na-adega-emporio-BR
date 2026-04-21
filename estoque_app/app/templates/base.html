@@ -68,23 +68,21 @@
             <span>Relatórios</span>
           </a>
         </li>
+
+        {% if current_user.is_admin %}
+        <li class="nav-label">Administração</li>
+
+        <li>
+          <a href="{{ url_for('usuarios.lista_usuarios') }}"
+             class="{{ 'active' if request.endpoint and request.endpoint.startswith('usuarios.') }}">
+            <i class="bi bi-people-fill"></i>
+            <span>Usuários</span>
+          </a>
+        </li>
+        {% endif %}
       </ul>
     </nav>
 
-    <div class="sidebar-footer">
-      <div class="user-info">
-        <div class="user-avatar">
-          <i class="bi bi-person-fill"></i>
-        </div>
-        <div class="user-details">
-          <span class="user-name">{{ current_user.nome }}</span>
-          <span class="user-role">{{ 'Admin' if current_user.is_admin else 'Operador' }}</span>
-        </div>
-      </div>
-      <a href="{{ url_for('auth.logout') }}" class="btn-logout" title="Sair">
-        <i class="bi bi-box-arrow-right"></i>
-      </a>
-    </div>
   </aside>
   <!-- /SIDEBAR -->
 
@@ -99,6 +97,19 @@
       <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
       <div class="topbar-right">
         {% block topbar_actions %}{% endblock %}
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">
+          <div class="topbar-avatar"><i class="bi bi-person-fill"></i></div>
+          <div class="topbar-user-info">
+            <span class="topbar-user-name">{{ current_user.nome }}</span>
+            <span class="topbar-user-role" style="{{ '' if current_user.is_admin else 'color:var(--info);' }}">
+              {{ 'Admin' if current_user.is_admin else 'Operador' }}
+            </span>
+          </div>
+        </div>
+        <a href="{{ url_for('auth.logout') }}" class="btn-logout" title="Sair">
+          <i class="bi bi-box-arrow-right"></i>
+        </a>
       </div>
     </header>
     <!-- /TOPBAR -->

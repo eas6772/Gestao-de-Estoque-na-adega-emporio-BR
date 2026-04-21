@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Usuários — Empório BR{% endblock %}
+{% block page_title %}Usuários{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('usuarios.novo_usuario') }}" class="btn-accent">
+  <i class="bi bi-person-plus-fill"></i> Novo Usuário
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card-dark">
+  <div class="section-header mb-3">
+    <div class="section-title-group">
+      <span class="section-dot dot-green"></span>
+      <h5 class="section-title">Usuários Cadastrados</h5>
+    </div>
+    <span class="badge-gray">{{ usuarios|length }} usuário(s)</span>
+  </div>
+
+  <div class="table-scroll">
+    <table class="table-dark-custom">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nome</th>
+          <th class="text-center">Perfil</th>
+          <th class="text-center">Status</th>
+          <th class="text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr>
+          <td class="text-muted-col">{{ u.id }}</td>
+          <td>
+            <span class="product-name">{{ u.nome }}</span>
+            {% if u.id == current_user.id %}
+              <span class="badge-gray" style="margin-left:6px; font-size:10px;">você</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if u.is_admin %}
+              <span class="status-badge status-ok">Admin</span>
+            {% else %}
+              <span class="status-badge" style="background:rgba(148,163,184,.15); color:var(--text-secondary); border:1px solid rgba(148,163,184,.2);">Operador</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if u.ativo %}
+              <span class="status-badge status-ok">Ativo</span>
+            {% else %}
+              <span class="status-badge status-danger">Inativo</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <div style="display:flex; gap:6px; justify-content:center;">
+              <a href="{{ url_for('usuarios.editar_usuario', id=u.id) }}"
+                 class="btn-icon" title="Editar">
+                <i class="bi bi-pencil-fill"></i>
+              </a>
+              {% if u.id != current_user.id %}
+              <form method="POST"
+                    action="{{ url_for('usuarios.toggle_ativo', id=u.id) }}"
+                    style="display:inline"
+                    onsubmit="return confirm('{{ 'Desativar' if u.ativo else 'Ativar' }} o usuário {{ u.nome }}?')">
+                <button type="submit" class="btn-icon {{ 'btn-icon-danger' if u.ativo else 'btn-icon-ok' }}"
+                        title="{{ 'Desativar' if u.ativo else 'Ativar' }}">
+                  <i class="bi bi-{{ 'slash-circle-fill' if u.ativo else 'check-circle-fill' }}"></i>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="text-center text-muted-col" style="padding:24px">
+            Nenhum usuário cadastrado.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -4,7 +4,7 @@ __pycache__/
 *.pyc
 .vscode/
 Documentos/
-.cursor/
+.CLAUDE.md
 *.plan
 requirements/
 .cursorignore
