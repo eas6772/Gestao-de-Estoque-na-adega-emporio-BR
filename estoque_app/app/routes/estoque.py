@@ -150,6 +150,46 @@ def ajuste():
     return render_template('estoque/ajuste.html', produtos=produtos, form={})
 
 
+# ── Editar Validade de Lote ─────────────────────────────────
+
+@estoque_bp.route('/estoque/lote/<int:lote_id>/validade', methods=['GET', 'POST'])
+@login_required
+@requer_admin
+def editar_validade(lote_id):
+    lote = Lote.query.get_or_404(lote_id)
+    produto = lote.produto
+
+    if request.method == 'POST':
+        nova_validade_str = request.form.get('data_validade', '').strip()
+        motivo = request.form.get('motivo', '').strip() or 'Correção de data de validade'
+
+        nova_validade = None
+        if nova_validade_str:
+            try:
+                nova_validade = date.fromisoformat(nova_validade_str)
+            except ValueError:
+                flash('Data de validade inválida.', 'warning')
+                return render_template('estoque/editar_validade.html', lote=lote, produto=produto)
+
+        lote.data_validade = nova_validade
+
+        mov = Movimentacao(
+            produto_id=produto.id,
+            lote_id=lote.id,
+            tipo='ajuste',
+            quantidade=0,
+            usuario_id=current_user.id,
+            motivo=motivo,
+        )
+        db.session.add(mov)
+        db.session.commit()
+
+        flash(f'Validade do lote #{lote.id} ({produto.nome}) atualizada.', 'success')
+        return redirect(url_for('estoque.visao_geral'))
+
+    return render_template('estoque/editar_validade.html', lote=lote, produto=produto)
+
+
 # ── Histórico de Movimentações ──────────────────────────────
 
 @estoque_bp.route('/movimentacoes')

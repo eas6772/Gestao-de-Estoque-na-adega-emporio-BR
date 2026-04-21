@@ -42,9 +42,16 @@
 
         <div class="mb-3" id="loteContainer" style="display:none">
           <label for="lote_id">Lote <span class="required-star">*</span></label>
-          <select id="lote_id" name="lote_id" required>
-            <option value="">Selecione um lote</option>
-          </select>
+          <div style="display:flex; gap:8px; align-items:flex-start;">
+            <select id="lote_id" name="lote_id" required style="flex:1;">
+              <option value="">Selecione um lote</option>
+            </select>
+            <a id="btnEditarValidade" href="#" class="btn-outline btn-sm"
+               style="display:none; white-space:nowrap; padding-top:9px;"
+               title="Editar data de validade deste lote">
+              <i class="bi bi-calendar-event"></i> Editar Validade
+            </a>
+          </div>
         </div>
 
         <div class="mb-3" id="qtdContainer" style="display:none">
@@ -84,6 +91,7 @@
   const qtdInput = document.getElementById('nova_quantidade');
   const qtdInfo = document.getElementById('qtdAtualInfo');
   const btnAjuste = document.getElementById('btnAjuste');
+  const btnEditarValidade = document.getElementById('btnEditarValidade');
 
   prodSelect.addEventListener('change', async function() {
     const id = this.value;
@@ -120,9 +128,12 @@
       qtdInput.value = opt.dataset.qtd;
       qtdInfo.textContent = `Quantidade atual no sistema: ${opt.dataset.qtd} unidade(s)`;
       btnAjuste.disabled = false;
+      btnEditarValidade.href = `/estoque/lote/${opt.value}/validade`;
+      btnEditarValidade.style.display = 'inline-flex';
     } else {
       qtdContainer.style.display = 'none';
       btnAjuste.disabled = true;
+      btnEditarValidade.style.display = 'none';
     }
   });
 </script>

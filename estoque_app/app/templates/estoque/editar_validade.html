@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Validade do Lote — Empório BR{% endblock %}
+{% block page_title %}Editar Validade{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('estoque.ajuste') }}" class="btn-outline">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+
+    <!-- Info do lote -->
+    <div class="card-dark mb-3">
+      <div class="section-header mb-3">
+        <div class="section-title-group">
+          <span class="section-dot dot-blue"></span>
+          <h5 class="section-title">Dados do Lote</h5>
+        </div>
+        <span class="badge-gray">Lote #{{ lote.id }}</span>
+      </div>
+      <table class="table-dark-custom">
+        <tbody>
+          <tr>
+            <td class="text-muted-col" style="width:40%">Produto</td>
+            <td><span class="product-name">{{ produto.nome }}</span></td>
+          </tr>
+          {% if lote.numero_lote %}
+          <tr>
+            <td class="text-muted-col">Número do Lote</td>
+            <td>{{ lote.numero_lote }}</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td class="text-muted-col">Quantidade</td>
+            <td><strong class="value-ok">{{ lote.quantidade }}</strong> unidade(s)</td>
+          </tr>
+          <tr>
+            <td class="text-muted-col">Data de Entrada</td>
+            <td>{{ lote.data_entrada.strftime('%d/%m/%Y') if lote.data_entrada else '—' }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted-col">Validade Atual</td>
+            <td>
+              {% if lote.data_validade %}
+                <strong class="{{ 'value-danger' if lote.vencido else '' }}">
+                  {{ lote.data_validade.strftime('%d/%m/%Y') }}
+                </strong>
+                {% if lote.vencido %}<span class="badge-red ms-2">Vencido</span>{% endif %}
+              {% else %}
+                <span class="text-muted-sm">Sem validade</span>
+              {% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Formulário -->
+    <div class="card-dark">
+      <div class="section-header mb-2">
+        <div class="section-title-group">
+          <span class="section-dot dot-yellow"></span>
+          <h5 class="section-title">Nova Data de Validade</h5>
+        </div>
+      </div>
+      <p class="form-hint mb-4">
+        <i class="bi bi-shield-lock-fill me-1"></i>
+        Ação restrita a administradores. A alteração será registrada no histórico.
+      </p>
+
+      <form method="POST" class="form-dark">
+
+        <div class="mb-3">
+          <label for="data_validade">Data de Validade</label>
+          <input type="date" id="data_validade" name="data_validade"
+                 value="{{ lote.data_validade.strftime('%Y-%m-%d') if lote.data_validade else '' }}">
+          <p class="field-hint">Deixe em branco para remover a data de validade.</p>
+        </div>
+
+        <div class="mb-4">
+          <label for="motivo">Motivo da Alteração <span class="required-star">*</span></label>
+          <input type="text" id="motivo" name="motivo"
+                 placeholder="Ex.: Erro de digitação, nova informação do fabricante..."
+                 required>
+        </div>
+
+        <div class="form-actions">
+          <a href="{{ url_for('estoque.ajuste') }}" class="btn-outline">Cancelar</a>
+          <button type="submit" class="btn-accent">
+            <i class="bi bi-calendar-check-fill"></i> Salvar Validade
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
