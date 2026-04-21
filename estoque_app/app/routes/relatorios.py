@@ -46,6 +46,7 @@ def relatorio_estoque():
 def mais_vendidos():
     data_ini = request.args.get('data_ini', '')
     data_fim = request.args.get('data_fim', '')
+    pagina = request.args.get('pagina', 1, type=int)
 
     query = (
         db.session.query(
@@ -75,12 +76,16 @@ def mais_vendidos():
         except ValueError:
             pass
 
-    resultados = query.limit(20).all()
-    receita_total = sum(r.receita for r in resultados)
-    unidades_total = sum(r.qtd_vendida for r in resultados)
+    todos = query.all()
+    receita_total = sum(r.receita for r in todos)
+    unidades_total = sum(r.qtd_vendida for r in todos)
+
+    paginacao = query.paginate(page=pagina, per_page=POR_PAGINA, error_out=False)
+    resultados = paginacao.items
 
     return render_template(
         'relatorios/mais_vendidos.html',
+        paginacao=paginacao,
         resultados=resultados,
         receita_total=receita_total,
         unidades_total=unidades_total,
@@ -254,6 +259,7 @@ def relatorio_movimentacoes():
 def relatorio_lucro():
     data_ini = request.args.get('data_ini', '')
     data_fim = request.args.get('data_fim', '')
+    pagina = request.args.get('pagina', 1, type=int)
 
     query = (
         db.session.query(
@@ -286,13 +292,16 @@ def relatorio_lucro():
         except ValueError:
             pass
 
-    resultados = query.all()
-    lucro_total = sum(r.receita - r.custo_total for r in resultados)
-    receita_total = sum(r.receita for r in resultados)
+    todos = query.all()
+    lucro_total = sum(r.receita - r.custo_total for r in todos)
+    receita_total = sum(r.receita for r in todos)
+
+    paginacao = query.paginate(page=pagina, per_page=POR_PAGINA, error_out=False)
 
     return render_template(
         'relatorios/lucro.html',
-        resultados=resultados,
+        paginacao=paginacao,
+        resultados=paginacao.items,
         lucro_total=lucro_total,
         receita_total=receita_total,
         data_ini=data_ini,

@@ -73,6 +73,7 @@
       </p>
 
       <form method="POST" class="form-dark">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="mb-3">
           <label for="data_validade">Data de Validade</label>

@@ -31,7 +31,7 @@
       <span class="section-dot dot-yellow"></span>
       <h5 class="section-title">Top 20 Produtos Mais Vendidos</h5>
     </div>
-    <span class="badge-gray">{{ resultados|length }} produto(s)</span>
+    <span class="badge-gray">{{ paginacao.total }} produto(s)</span>
   </div>
 
   {% if resultados %}
@@ -85,5 +85,38 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Paginação -->
+  {% if paginacao.pages > 1 %}
+  <div class="pagination-wrap mt-3">
+    <ul class="pagination-dark">
+      <li class="page-item {{ 'disabled' if not paginacao.has_prev }}">
+        <a class="page-link"
+           href="{{ url_for('relatorios.mais_vendidos', pagina=paginacao.prev_num, data_ini=data_ini, data_fim=data_fim) }}">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      {% for p in paginacao.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+          <li class="page-item {{ 'active' if p == paginacao.page }}">
+            <a class="page-link"
+               href="{{ url_for('relatorios.mais_vendidos', pagina=p, data_ini=data_ini, data_fim=data_fim) }}">
+              {{ p }}
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {{ 'disabled' if not paginacao.has_next }}">
+        <a class="page-link"
+           href="{{ url_for('relatorios.mais_vendidos', pagina=paginacao.next_num, data_ini=data_ini, data_fim=data_fim) }}">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}

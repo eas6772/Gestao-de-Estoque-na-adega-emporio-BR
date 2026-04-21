@@ -65,6 +65,7 @@
                     action="{{ url_for('usuarios.toggle_ativo', id=u.id) }}"
                     style="display:inline"
                     onsubmit="return confirm('{{ 'Desativar' if u.ativo else 'Ativar' }} o usuário {{ u.nome }}?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn-icon {{ 'btn-icon-danger' if u.ativo else 'btn-icon-ok' }}"
                         title="{{ 'Desativar' if u.ativo else 'Ativar' }}">
                   <i class="bi bi-{{ 'slash-circle-fill' if u.ativo else 'check-circle-fill' }}"></i>

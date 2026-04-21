@@ -25,6 +25,7 @@
       </p>
 
       <form method="POST" action="{{ url_for('estoque.ajuste') }}" class="form-dark">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="mb-3">
           <label for="produto_id">Produto <span class="required-star">*</span></label>

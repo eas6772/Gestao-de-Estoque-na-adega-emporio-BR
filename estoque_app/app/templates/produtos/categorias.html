@@ -30,6 +30,7 @@
       <form method="POST"
             action="{{ url_for('produtos.nova_categoria') }}"
             class="form-dark">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
           <label for="nome">Nome <span class="required-star">*</span></label>
           <input type="text" id="nome" name="nome"
@@ -92,6 +93,7 @@
                   <form method="POST"
                         action="{{ url_for('produtos.toggle_categoria', id=cat.id) }}"
                         onsubmit="return confirm('{{ 'Desativar' if cat.ativo else 'Ativar' }} {{ cat.nome }}?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                             class="btn-icon {{ 'btn-icon-danger' if cat.ativo }}"
                             title="{{ 'Desativar' if cat.ativo else 'Ativar' }}">
@@ -129,6 +131,7 @@
       </button>
     </div>
     <form method="POST" id="formEditar" class="form-dark">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="mb-3">
         <label for="nomeEditar">Nome <span class="required-star">*</span></label>
         <input type="text" id="nomeEditar" name="nome" required>

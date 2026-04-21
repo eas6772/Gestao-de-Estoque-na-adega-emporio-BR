@@ -88,6 +88,7 @@
       </div>
 
       <form method="POST" action="{{ url_for('vendas.nova_venda') }}" id="formVenda">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="itens_json" id="itensJson" value="[]">
         <button type="submit" class="btn-accent w-100 mt-4" id="btnFinalizar" disabled>
           <i class="bi bi-bag-check-fill"></i> Finalizar Venda

@@ -16,6 +16,7 @@
     <form method="POST"
           action="{{ url_for('produtos.editar_produto', id=produto.id) if editando else url_for('produtos.novo_produto') }}"
           class="form-dark">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <!-- Informações Básicas -->
       <div class="card-dark mb-4">
