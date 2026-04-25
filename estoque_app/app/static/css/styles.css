@@ -764,6 +764,20 @@ a { text-decoration: none; color: inherit; }
 .filter-select:focus { border-color: var(--accent); }
 .filter-select option { background: var(--bg-surface); }
 
+/* ── Ícone do selecionador de datas (todos os inputs type=date) ── */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.8);
+  opacity: 0.85;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  transition: opacity 0.15s;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background: var(--accent-dim);
+}
+
 /* ============================================================
    FORMULÁRIOS DE PRODUTO
    ============================================================ */
