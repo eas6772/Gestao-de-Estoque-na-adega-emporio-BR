@@ -1,7 +1,8 @@
+from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models.models import Usuario
+from app.models.models import Usuario, Movimentacao
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
@@ -99,6 +100,62 @@ def editar_usuario(id):
         return redirect(url_for('usuarios.lista_usuarios'))
 
     return render_template('usuarios/form.html', usuario=u, acao='editar')
+
+
+@usuarios_bp.route('/admin/movimentacoes/purge', methods=['GET', 'POST'])
+@login_required
+def purge_movimentacoes():
+    bloqueio = _somente_admin()
+    if bloqueio:
+        return bloqueio
+
+    total_preview = None
+    data_inicio_str = ''
+    data_fim_str = ''
+
+    if request.method == 'POST':
+        data_inicio_str = request.form.get('data_inicio', '').strip()
+        data_fim_str   = request.form.get('data_fim', '').strip()
+        acao           = request.form.get('acao', 'preview')
+
+        try:
+            data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d')
+            data_fim    = datetime.strptime(data_fim_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+        except ValueError:
+            flash('Datas inválidas. Use o formato correto.', 'warning')
+            return render_template('usuarios/purge_movimentacoes.html',
+                                   total_preview=None,
+                                   data_inicio=data_inicio_str,
+                                   data_fim=data_fim_str)
+
+        if data_inicio > data_fim:
+            flash('A data inicial deve ser anterior ou igual à data final.', 'warning')
+            return render_template('usuarios/purge_movimentacoes.html',
+                                   total_preview=None,
+                                   data_inicio=data_inicio_str,
+                                   data_fim=data_fim_str)
+
+        query = Movimentacao.query.filter(
+            Movimentacao.data >= data_inicio,
+            Movimentacao.data <= data_fim
+        )
+
+        if acao == 'preview':
+            total_preview = query.count()
+        elif acao == 'confirmar':
+            total = query.count()
+            if total == 0:
+                flash('Nenhuma movimentação encontrada no período informado.', 'info')
+            else:
+                query.delete(synchronize_session=False)
+                db.session.commit()
+                flash(f'{total} movimentação(ões) excluída(s) com sucesso.', 'success')
+            return redirect(url_for('usuarios.purge_movimentacoes'))
+
+    return render_template('usuarios/purge_movimentacoes.html',
+                           total_preview=total_preview,
+                           data_inicio=data_inicio_str,
+                           data_fim=data_fim_str)
 
 
 @usuarios_bp.route('/usuarios/<int:id>/toggle-ativo', methods=['POST'])

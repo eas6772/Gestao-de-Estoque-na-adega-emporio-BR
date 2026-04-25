@@ -74,9 +74,17 @@
 
         <li>
           <a href="{{ url_for('usuarios.lista_usuarios') }}"
-             class="{{ 'active' if request.endpoint and request.endpoint.startswith('usuarios.') }}">
+             class="{{ 'active' if request.endpoint == 'usuarios.lista_usuarios' or request.endpoint in ['usuarios.novo_usuario', 'usuarios.editar_usuario', 'usuarios.toggle_ativo'] }}">
             <i class="bi bi-people-fill"></i>
             <span>Usuários</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="{{ url_for('usuarios.purge_movimentacoes') }}"
+             class="{{ 'active' if request.endpoint == 'usuarios.purge_movimentacoes' }}">
+            <i class="bi bi-trash3-fill"></i>
+            <span>Apagar Movimentações</span>
           </a>
         </li>
         {% endif %}
