@@ -102,7 +102,7 @@
           <div class="topbar-avatar"><i class="bi bi-person-fill"></i></div>
           <div class="topbar-user-info">
             <span class="topbar-user-name">{{ current_user.nome }}</span>
-            <span class="topbar-user-role" style="{{ '' if current_user.is_admin else 'color:var(--info);' }}">
+            <span class="topbar-user-role" {% if not current_user.is_admin %}style="color:var(--info);"{% endif %}>
               {{ 'Admin' if current_user.is_admin else 'Operador' }}
             </span>
           </div>
