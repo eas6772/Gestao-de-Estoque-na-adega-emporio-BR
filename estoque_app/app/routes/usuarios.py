@@ -70,6 +70,8 @@ def editar_usuario(id):
     if request.method == 'POST':
         nome = request.form.get('nome', '').strip()
         perfil = request.form.get('perfil', 'operador')
+        if perfil not in ('admin', 'operador'):
+            perfil = 'operador'
         nova_senha = request.form.get('senha', '')
 
         if not nome:

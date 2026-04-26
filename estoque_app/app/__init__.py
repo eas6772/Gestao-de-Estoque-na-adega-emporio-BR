@@ -1,6 +1,6 @@
 from flask import Flask
 from config import config
-from app.extensions import db, login_manager, migrate, csrf
+from app.extensions import db, login_manager, migrate, csrf, limiter
 
 
 def create_app(config_name='default'):
@@ -11,6 +11,7 @@ def create_app(config_name='default'):
     login_manager.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     from app.models import models  # noqa: F401 — necessário para o Flask-Migrate detectar os modelos
 

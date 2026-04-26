@@ -95,9 +95,9 @@
                         onsubmit="return confirm('{{ 'Desativar' if cat.ativo else 'Ativar' }} {{ cat.nome }}?')">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
-                            class="btn-icon {{ 'btn-icon-danger' if cat.ativo }}"
-                            title="{{ 'Desativar' if cat.ativo else 'Ativar' }}">
-                      <i class="bi bi-{{ 'toggle-on' if cat.ativo else 'toggle-off' }}-fill"></i>
+                            class="btn-icon {{ 'btn-icon-danger' if cat.ativo else 'btn-icon-success' }}"
+                            title="{{ 'Desativar categoria' if cat.ativo else 'Reativar categoria' }}">
+                      <i class="bi bi-{{ 'x-circle-fill' if cat.ativo else 'check-circle-fill' }}"></i>
                     </button>
                   </form>
                 </div>

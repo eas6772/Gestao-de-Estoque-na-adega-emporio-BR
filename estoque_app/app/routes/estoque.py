@@ -76,6 +76,9 @@ def entrada():
             except ValueError:
                 flash('Data de validade inválida.', 'warning')
                 return render_template('estoque/entrada.html', produtos=produtos, form=request.form)
+            if data_validade < date.today():
+                flash('A data de validade não pode ser anterior a hoje.', 'warning')
+                return render_template('estoque/entrada.html', produtos=produtos, form=request.form)
 
         lote = Lote(
             produto_id=produto_id,
