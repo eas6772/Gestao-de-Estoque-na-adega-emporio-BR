@@ -3,11 +3,14 @@ Popula o banco com dados iniciais: usuário admin e categorias padrão.
 Uso: flask --app run.py shell < seed.py
   ou: python seed.py (dentro de estoque_app/)
 """
+import os
 from app import create_app
 from app.extensions import db
 from app.models.models import Usuario, Categoria
 
-app = create_app('development')
+env = os.environ.get('FLASK_ENV', 'development')
+config_name = 'production' if env == 'production' else 'development'
+app = create_app(config_name)
 
 with app.app_context():
     admin = Usuario.query.filter_by(nome='admin').first()
