@@ -11,3 +11,4 @@ Para testar o App em um servidor local, deve-se seguir os passos listados abaixo
 >- Uma vez dentro do ambiente virtual instale as dependências do Projeto digitando no prompt: ***pip install -r requirements.txt***  
 >- Rode a aplicação em um servidor local com o comando: ***python run.py***.  
 Para fazer login use: Usuário ***admin*** e psw: ***123456***
+## Teste do Fedora
